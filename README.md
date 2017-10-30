@@ -4,7 +4,7 @@
 # BCF 217 Bible Study Backend
 <b>Description:</b> Backend and API Scripts for BCF 217 Bible Study Application
 
-<b>Authors:</b> bfan1256, GuyInJeans
+<b>Authors:</b> bfan1256, JDS0530 
 
 ## TODO List
 * ~~Create Initial README.md~~
