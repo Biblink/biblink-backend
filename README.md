@@ -9,9 +9,16 @@
 ## TODO List
 * ~~Create Initial README.md~~
 * Create Initial Folder Structure
-* Implement Bible API Server (See [API](https://github.com/bfan1256/bible-study-application-backend/new/master?readme=1#resources) Below)
+* Implement Functions for Bible Processing
+* Implement Bible API Server
 
+
+## Setup List
+### 1. Ruby Setup
+1. Install [Ruby](https://www.ruby-lang.org/en/downloads/)
+2. `cd ./bible-processing`
+3. `bundle install`
+4. `ruby app.rb`
 ## Resources
-[Bible API Link](https://bible-api.com/)
 
 [Building a Basic RESTful API in Python ](https://www.codementor.io/sagaragarwal94/building-a-basic-restful-api-in-python-58k02xsiq)
