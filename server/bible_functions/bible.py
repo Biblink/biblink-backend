@@ -74,8 +74,7 @@ class Bible(object):
         return response
 
     def get_metadata(self, book):
-        # need metadata in json before implementation
-        pass
+        return self.bible[self.books.index(book)]['metadata']
 
     def get_data(self, book, chapter, verses=[]):
         response = {'data': []}
