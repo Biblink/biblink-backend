@@ -7,6 +7,7 @@ Last Edit Date: 10/30/2017
 import json
 import os
 import random
+import re
 
 
 class Bible(object):
@@ -23,6 +24,58 @@ class Bible(object):
                 'Please enter a proper .json file, you entered: {0}'
                 .format(bible_file_path))
         self.books = [book['name'] for book in self.bible]
+        self.query_parser = re.compile(r'(\d\s)?([\w\.]+)\s([\d:,\-]+)')
+
+    def parse_query(self, string_query):
+        # create return response
+        response = {'book': '', 'queries': []}
+        # match query with regular expression
+        match = self.query_parser.match(string_query)
+        if not match:
+            raise ValueError('Please enter a parseable script')
+            return
+        # get groups of data
+        information = list(match.groups())
+        # if no number in book (i.e. Genesis) then
+        # remove the first value in array
+        if information[0] is None:
+            information = information[1:]
+        # get book value
+        response['book'] = information[:-1]
+        # split based on semicolons (i.e. 34:11; 45:32)
+        chapter_verse_data = information[-1].split(';')
+        for data in chapter_verse_data:
+            # create temp_data
+            temp_data = {'chapter': '', 'verses': []}
+            # split each chapter_verse (i.e. 34:11 or 34:11-15)
+            chapter_and_verse = data.split(':')
+            # set chapter
+            temp_data['chapter'] = chapter_and_verse[0].strip()
+            # get all verses either number or range
+            verses = [i.strip()
+                      for i in chapter_and_verse[1].split(',')]
+            # iterate through verses
+            for verse in verses:
+                # if verse number is range
+                if '-' in verse:
+                    verse_ranges = verse.split('-')
+                    start_range = int(verse_ranges[0])
+                    end_range = int(verse_ranges[1])
+                    # generate range of verses
+                    temp_verses = [i for i in range(
+                        start_range, end_range + 1)]
+                    # add to verse array
+                    temp_data['verses'] += temp
+                else:
+                    # append integer of verse
+                    temp_data['verses'].append(int(verse))
+            # append each chapter to query
+            response['queries'].append(temp_data)
+        return response
+
+    def get_metadata(self, book):
+        # need metadata in json before implementation
+        pass
 
     def get_data(self, book, chapter, verses=[]):
         response = {'data': []}
