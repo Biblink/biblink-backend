@@ -104,7 +104,7 @@ class Bible(object):
     def get_chapter(self, book_data, chapter):
         if int(chapter) >= len(book_data['data']):
             self._throw_value_error('Please enter a proper ' +
-                                    'chapter of the book:' {0}'
+                                    'chapter of the book: {0}'
                                     .format(book_data['name']))
         return book_data['data'][int(chapter) + 1]
 
