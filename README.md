@@ -1,7 +1,7 @@
 
 <div style="display: block; text-align:center" align="center"><img alt="BCF Logo" src="http://blacksburgchristianfellowship.org/wp-content/uploads/2017/01/yellow-mobile-logo.png" /></div>
 
-# BCF 217 Bible Study Backend
+# BCF 217 Bible Study Backend 
 
 [![Build Status](https://travis-ci.org/bfan1256/bible-study-application-backend.svg?branch=master)](https://travis-ci.org/bfan1256/bible-study-application-backend)
 
