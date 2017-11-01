@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """Bible class to handle communication with bible.json
+
 Author: Brandon Fan
 Last Edit Date: 10/30/2017
+Todo:
+    * implement @property functions
+    * finish python documentation
 """
 import json
 import os
@@ -11,13 +15,14 @@ import re
 
 class Bible(object):
     """Bible that handles communicating and generating data from a bible.json
+
     Talks to various types of bibles (EWB, Cherokee etc.). Has various methods
     to talk to process data file and grab information such as verses text, metadata on
     bible books etc. and return a dictionary response for each
 
     Attributes:
-        bible (:obj:`dict`): Bible data loaded from bible_file_path JSON file.
-        books (:obj:`list`): List of books in the Protestant bible.
+        bible (dict): Bible data loaded from bible_file_path JSON file.
+        books (list): List of books in the Protestant bible.
     """
 
     def __init__(self, bible_file_path):
@@ -35,6 +40,27 @@ class Bible(object):
         self._query_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
 
     def parse_query(self, string_query):
+        """Function to parse string query to get book and corresponding queries
+
+        Uses a regular expression to return the book and to process
+        chapter and verses from the string. Generates a dictionary
+        response with the book and queries that can then be fed into
+
+          Args:
+            string_query (str): query string to parse
+
+        Returns:
+            (dict): dictionary of book and queries
+            response is below::
+
+                {
+                    'book': (str),
+                    'queries': (list)
+                }
+
+        Raises:
+            ValueError: if query string is not parseable
+        """
         # create return response
         response = {'book': '', 'queries': []}
         string_query = re.sub(r'[\'\"]', '', string_query)
@@ -82,9 +108,55 @@ class Bible(object):
         return response
 
     def get_metadata(self, book):
-        return self.bible[self.books.index(book)]['metadata']
+        """Function to get metadata from a corresponding book data dictionary
+
+        Reads in data from book parameter and retrieves the metadata
+
+        Args:
+            book (dict): book data from get_book() function
+
+        Returns:
+            (dict): dictionary of metadata
+            response is below::
+
+                {
+                    'author': (str),
+                    'date': (str)
+                }
+
+        Raises:
+            ValueError: if book data is invalid
+        """
+        try:
+            return self.bible[self.books.index(book)]['metadata']
+        except Exception:
+            raise ValueError('Please provide a proper book data dictionary')
 
     def get_data(self, book, chapter, verses=None):
+        """Function to get verses from a book and a chapter
+
+        Uses a book, chapter and verses parameters to retrieve
+        specific bible verses from the json file. After gathering the
+        information, returns it in a dictionary as a response.
+
+        Args:
+            book (str): book name
+            chapter (str): chapter name
+            verses (list, optional): list of verses
+
+        Returns:
+            (dict): dictionary of response data
+            response is below::
+
+                {
+                    'id': (int),
+                    'verse_data': (list)
+                    'combined_text': (str)
+                }
+
+        Raises:
+            ValueError: if book name is not a proper string
+        """
         response = {'verse_data': []}
         response['id'] = random.randint(1, 1000000)
         if not isinstance(book, str):
@@ -110,6 +182,27 @@ class Bible(object):
         return response
 
     def get_book(self, book):
+        """Function to get book data from self.bible
+
+        Uses a book name to reference the book data in self.bible.
+        Generates a dictionary response with the book data
+
+        Args:
+            book (str): book name to parse
+
+        Returns:
+            (dict): dictionary of book data
+            response is below::
+
+                {
+                    'name': (str),
+                    'data': (list),
+                    'metadata': (dict),
+                }
+
+        Raises:
+            ValueError: if book is not in self.books
+        """
         book = book.strip().lower()
         if book not in self.books:
             self._throw_value_error(
@@ -117,6 +210,29 @@ class Bible(object):
         return self.bible[self.books.index(book)]  # get data from book
 
     def get_chapter(self, book_data, chapter):
+        """Function to get chapter data from book_data
+
+        Uses the chapter parameter and gets the chapter from the book_data
+        parameter. Generates a dictionary response with the
+        chapter data
+
+        Args:
+            book_data (dict): book_data to be referenced
+            chapter (str or int): chapter name to be referenced
+
+        Returns:
+            (dict): dictionary of chapter data
+            response is below::
+
+                {
+                    'chapter': (str),
+                    'chapter_number': (str),
+                    'verses': (list of dict),
+                }
+
+        Raises:
+            ValueError: if chapter is not a proper chapter in book
+        """
         if int(chapter) >= len(book_data['data']):
             self._throw_value_error('Please enter a proper ' +
                                     'chapter of the book: {0}'
@@ -124,6 +240,28 @@ class Bible(object):
         return book_data['data'][int(chapter) - 1]
 
     def get_verse(self, chapter_data, verse):
+        """Function to get verse data from chapter_data
+
+        Uses the verse parameter and gets the verse from the chapter_data
+        parameter. Generates a dictionary response with the verse data.
+
+        Args:
+            chapter_data (dict): chapter_data to be referenced
+            verse (str or int): verse name to be referenced
+
+        Returns:
+            (dict): dictionary of verse data
+            response is below::
+
+                {
+                    'verse': (str),
+                    'verse_number': (str),
+                    'text': (str),
+                }
+
+        Raises:
+            ValueError: if chapter is not a proper chapter in book
+        """
         if int(verse) >= len(chapter_data['verses']):
             self._throw_value_error('Please enter a proper verse of the ' +
                                     'chapter: {0}'
