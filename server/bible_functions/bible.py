@@ -10,9 +10,18 @@ import re
 
 
 class Bible(object):
+    """Bible that handles communicating and generating data from a bible.json
+    Talks to various types of bibles (EWB, Cherokee etc.). Has various methods
+    to talk to process data file and grab information such as verses text, metadata on
+    bible books etc. and return a dictionary response for each
+
+    Attributes:
+        bible (:obj:`dict`): Bible data loaded from bible_file_path JSON file.
+        books (:obj:`list`): List of books in the Protestant bible.
+    """
+
     def __init__(self, bible_file_path):
-        if bible_file_path.endswith('.json') and \
-                os.path.isfile(bible_file_path):
+        if bible_file_path.endswith('.json') and os.path.isfile(bible_file_path):
             # grab json file
             bible_file = open(bible_file_path)
             self.bible = json.load(bible_file)
