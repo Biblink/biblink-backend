@@ -1,9 +1,8 @@
-'''
-bible.py
-Description: Bible class to handle communication with bible.json
+# -*- coding: utf-8 -*-
+"""Bible class to handle communication with bible.json
 Author: Brandon Fan
 Last Edit Date: 10/30/2017
-'''
+"""
 import json
 import os
 import random
@@ -20,20 +19,19 @@ class Bible(object):
             # delete bible_file variable from memory
             del bible_file
         else:
-            raise ValueError(
-                'Please enter a proper .json file, you entered: {0}'
-                .format(bible_file_path))
+            self._throw_value_error('Please enter a proper .json file, you' +
+                                    ' entered: {0}'
+                                    .format(bible_file_path))
         self.books = [book['name'] for book in self.bible]
-        self.query_parser = re.compile(r'(\d\s)?([\w\.]+)\s([\d:,\-]+)')
+        self._query_parser = re.compile(r'(\d\s)?([\w\.]+)\s([\d:,\-]+)')
 
     def parse_query(self, string_query):
         # create return response
         response = {'book': '', 'queries': []}
         # match query with regular expression
-        match = self.query_parser.match(string_query)
+        match = self._query_parser.match(string_query)
         if not match:
-            raise ValueError('Please enter a parseable script')
-            return
+            self._throw_value_error('Please enter a parseable query')
         # get groups of data
         information = list(match.groups())
         # if no number in book (i.e. Genesis) then
@@ -42,7 +40,7 @@ class Bible(object):
             information = information[1:]
         # get book value
         response['book'] = information[:-1]
-        # split based on semicolons (i.e. 34:11; 45:32)
+        # split based on semicolons in verse info (i.e. 34:11; 45:32)
         chapter_verse_data = information[-1].split(';')
         for data in chapter_verse_data:
             # create temp_data
@@ -65,7 +63,7 @@ class Bible(object):
                     temp_verses = [i for i in range(
                         start_range, end_range + 1)]
                     # add to verse array
-                    temp_data['verses'] += temp
+                    temp_data['verses'] += temp_verses
                 else:
                     # append integer of verse
                     temp_data['verses'].append(int(verse))
@@ -76,20 +74,25 @@ class Bible(object):
     def get_metadata(self, book):
         return self.bible[self.books.index(book)]['metadata']
 
-    def get_data(self, book, chapter, verses=[]):
+    def get_data(self, book, chapter, verses=None):
         response = {'data': []}
         response['id'] = random.randint(1, 1000000)
         if not isinstance(book, str):
-            raise ValueError('Please enter a proper string for book name')
-            return
+            self._throw_value_error(
+                'Please enter a proper string for book name')
         book_data = self.get_book(book)
         chapter_data = self.get_chapter(book_data, chapter)
         verses_data = []
-        for verse in verses:
-            verses_data.append(self.get_verse(chapter_data))
+        if verses is None or verses is []:
+            for verse in chapter_data['verses']:
+                verses_data.append(verse)
+        else:
+            for verse in verses:
+                verses_data.append(self.get_verse(chapter_data, verse))
         response['data'] = verses_data
         text = ''
         for verse_data in verses_data:
+            # use <n> tags as html for frontend
             value = '<n>{0}</n>{1}'.format(
                 verse_data['verse_number'], verse_data['text'])
             text += value
@@ -99,24 +102,24 @@ class Bible(object):
     def get_book(self, book):
         book = book.strip()
         if book not in self.books:
-            raise ValueError(
+            self._throw_value_error(
                 'Please enter a proper book of the protestant bible.')
-            return
         return self.bible[self.books.index(book)]  # get data from book
 
     def get_chapter(self, book_data, chapter):
         if int(chapter) >= len(book_data['data']):
-            raise ValueError(
-                'Please enter a proper chapter of the book: {0}'
-                .format(book_data['name']))
-            return
-
+            self._throw_value_error('Please enter a proper ' +
+                                    'chapter of the book: {0}'
+                                    .format(book_data['name']))
         return book_data['data'][int(chapter) + 1]
 
     def get_verse(self, chapter_data, verse):
         if int(verse) >= len(chapter_data['verses']):
-            raise ValueError(
-                'Please enter a proper verse of the chapter: {0}'
-                .format(chapter_data['chapter']))
-            return
+            self._throw_value_error('Please enter a proper verse of the ' +
+                                    'chapter: {0}'
+                                    .format(chapter_data['chapter']))
         return chapter_data['verses'][int(verse) + 1]
+
+    @staticmethod
+    def _throw_value_error(information):
+        raise ValueError(information)
