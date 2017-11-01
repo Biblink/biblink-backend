@@ -23,13 +23,13 @@ class Bible(object):
                                     ' entered: {0}'
                                     .format(bible_file_path))
         self.books = [book['name'] for book in self.bible]
-        self.query_parser = re.compile(r'(\d\s)?([\w\.]+)\s([\d:,\-]+)')
+        self._query_parser = re.compile(r'(\d\s)?([\w\.]+)\s([\d:,\-]+)')
 
     def parse_query(self, string_query):
         # create return response
         response = {'book': '', 'queries': []}
         # match query with regular expression
-        match = self.query_parser.match(string_query)
+        match = self._query_parser.match(string_query)
         if not match:
             self._throw_value_error('Please enter a parseable query')
         # get groups of data
@@ -40,7 +40,7 @@ class Bible(object):
             information = information[1:]
         # get book value
         response['book'] = information[:-1]
-        # split based on semicolons (i.e. 34:11; 45:32)
+        # split based on semicolons in verse info (i.e. 34:11; 45:32)
         chapter_verse_data = information[-1].split(';')
         for data in chapter_verse_data:
             # create temp_data
@@ -83,10 +83,12 @@ class Bible(object):
         book_data = self.get_book(book)
         chapter_data = self.get_chapter(book_data, chapter)
         verses_data = []
-        if verses is None:
-            verses = []
-        for verse in verses:
-            verses_data.append(self.get_verse(chapter_data, verse))
+        if verses is None or verses is []:
+            for verse in chapter_data['verses']:
+                verses_data.append(verse)
+        else:
+            for verse in verses:
+                verses_data.append(self.get_verse(chapter_data, verse))
         response['data'] = verses_data
         text = ''
         for verse_data in verses_data:
