@@ -7,7 +7,7 @@ app = Flask(__name__)
 def api_root():
     query = request.args.get('query')
     Bible(query)
-    matched_query= query.parse_query 
+    matched_query = query.parse_query 
     data = matched_query.get_data 
     return jsonify(data) 
 
