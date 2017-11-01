@@ -74,7 +74,7 @@ class Bible(object):
     def get_metadata(self, book):
         return self.bible[self.books.index(book)]['metadata']
 
-    def get_data(self, book, chapter, verses=[]):
+    def get_data(self, book, chapter, verses=None):
         response = {'data': []}
         response['id'] = random.randint(1, 1000000)
         if not isinstance(book, str):
@@ -83,6 +83,8 @@ class Bible(object):
         book_data = self.get_book(book)
         chapter_data = self.get_chapter(book_data, chapter)
         verses_data = []
+        if verses is None:
+            verses = []
         for verse in verses:
             verses_data.append(self.get_verse(chapter_data, verse))
         response['data'] = verses_data
@@ -115,5 +117,6 @@ class Bible(object):
                                     .format(chapter_data['chapter']))
         return chapter_data['verses'][int(verse) + 1]
 
-    def _throw_value_error(self, information):
+    @staticmethod
+    def _throw_value_error(information):
         raise ValueError(information)
