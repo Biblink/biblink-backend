@@ -31,12 +31,13 @@ class Bible(object):
             self._throw_value_error('Please enter a proper .json file, you' +
                                     ' entered: {0}'
                                     .format(bible_file_path))
-        self.books = [book['name'] for book in self.bible]
-        self._query_parser = re.compile(r'(\d\s)?([\w\.]+)\s([\d:,\-]+)')
+        self.books = [book['name'].lower() for book in self.bible]
+        self._query_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
 
     def parse_query(self, string_query):
         # create return response
         response = {'book': '', 'queries': []}
+        string_query = re.sub(r'[\'\"]', '', string_query)
         # match query with regular expression
         match = self._query_parser.match(string_query)
         if not match:
@@ -48,7 +49,7 @@ class Bible(object):
         if information[0] is None:
             information = information[1:]
         # get book value
-        response['book'] = information[:-1]
+        response['book'] = ' '.join([i.strip() for i in information[:-1]])
         # split based on semicolons in verse info (i.e. 34:11; 45:32)
         chapter_verse_data = information[-1].split(';')
         for data in chapter_verse_data:
@@ -84,7 +85,7 @@ class Bible(object):
         return self.bible[self.books.index(book)]['metadata']
 
     def get_data(self, book, chapter, verses=None):
-        response = {'data': []}
+        response = {'verse_data': []}
         response['id'] = random.randint(1, 1000000)
         if not isinstance(book, str):
             self._throw_value_error(
@@ -98,18 +99,18 @@ class Bible(object):
         else:
             for verse in verses:
                 verses_data.append(self.get_verse(chapter_data, verse))
-        response['data'] = verses_data
+        response['verse_data'] = verses_data
         text = ''
         for verse_data in verses_data:
             # use <n> tags as html for frontend
             value = '<n>{0}</n>{1}'.format(
                 verse_data['verse_number'], verse_data['text'])
             text += value
-        response['text'] = text
+        response['combined_text'] = text
         return response
 
     def get_book(self, book):
-        book = book.strip()
+        book = book.strip().lower()
         if book not in self.books:
             self._throw_value_error(
                 'Please enter a proper book of the protestant bible.')
@@ -120,14 +121,14 @@ class Bible(object):
             self._throw_value_error('Please enter a proper ' +
                                     'chapter of the book: {0}'
                                     .format(book_data['name']))
-        return book_data['data'][int(chapter) + 1]
+        return book_data['data'][int(chapter) - 1]
 
     def get_verse(self, chapter_data, verse):
         if int(verse) >= len(chapter_data['verses']):
             self._throw_value_error('Please enter a proper verse of the ' +
                                     'chapter: {0}'
                                     .format(chapter_data['chapter']))
-        return chapter_data['verses'][int(verse) + 1]
+        return chapter_data['verses'][int(verse) - 1]
 
     @staticmethod
     def _throw_value_error(information):
