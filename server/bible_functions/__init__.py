@@ -1,1 +1,1 @@
-from bible import Bible
+from .bible import Bible
