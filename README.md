@@ -22,6 +22,11 @@
 2. `cd ./bible-processing`
 3. `bundle install`
 4. `ruby app.rb`
+### 2. Python Setup
+1. Install [Python](https://www.anaconda.com/download/)
+2. `cd ./server`
+3. `pip install -r requirements.txt`
+4. `python server.py`
 ## Resources
 
 [Building a Basic RESTful API in Python ](https://www.codementor.io/sagaragarwal94/building-a-basic-restful-api-in-python-58k02xsiq)
