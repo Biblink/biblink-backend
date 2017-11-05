@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 from bible_functions import Bible
 app = Flask(__name__)
 
-instance = None
+instance = Bible('../bible-files/english-web-bible.json')
 
 
 @app.route('/query')
@@ -28,4 +28,4 @@ def process_query():
 
 
 if __name__ == '__main__':
-    app.run(port='5000', debug=True)
+    app.run(port=5000, debug=True)

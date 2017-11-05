@@ -28,7 +28,7 @@ class Bible(object):
     def __init__(self, bible_file_path):
         if bible_file_path.endswith('.json') and os.path.isfile(bible_file_path):
             # grab json file
-            bible_file = open(bible_file_path)
+            bible_file = open(bible_file_path, encoding='utf-8-sig')
             self.bible = json.load(bible_file)
             # delete bible_file variable from memory
             del bible_file
