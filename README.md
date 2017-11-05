@@ -11,9 +11,13 @@
 
 ## TODO List
 * ~~Create Initial README.md~~
-* Create Initial Folder Structure
-* Implement Functions for Bible Processing
-* Implement Bible API Server
+* ~~Create Initial Folder Structure~~
+* ~~Implement Functions for Bible Processing~~
+* ~~Implement Bible API Server~~
+* Finish Commenting Files
+* Implement Paragraph2Vec Algorithm
+* Add DL API To Existing Server
+* Implement Unit Tests
 
 
 ## Setup List
