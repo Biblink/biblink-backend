@@ -2,7 +2,7 @@
 """Bible class to handle communication with bible.json
 
 Author: Brandon Fan
-Last Edit Date: 10/30/2017
+Last Edit Date: 11/5/2017
 Todo:
     * implement @property functions
     * finish python documentation
@@ -46,7 +46,7 @@ class Bible(object):
         chapter and verses from the string. Generates a dictionary
         response with the book and queries that can then be fed into
 
-          Args:
+        Args:
             string_query (str): query string to parse
 
         Returns:
