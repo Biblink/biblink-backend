@@ -1,8 +1,6 @@
 """Server to run Bible python API
 Authors: Brandon Fan, Jordan Seiler
 Last Edit Date: 11/5/2017
-Todo:
-    * implement verse similarity route
 """
 import random
 from flask import Flask, request, jsonify
