@@ -33,6 +33,7 @@ class Similarity(object):
             self.verse_data = []
         else:
             self._throw_value_error('Please enter a proper bible .json file')
+        print(' - Loading GloVe File...')
         if self._check_file(glove_file, '.txt'):
             self.glove_words = pd.read_table(glove_file,
                                              sep=" ", index_col=0,
@@ -46,8 +47,11 @@ class Similarity(object):
         # preprocess text corpus
         self.stopwords_list = set(stopwords.words('english'))
         self.exclude = set(string.punctuation)
+        print(' - Tokenizing Data...')
         self.tokenize_data(self.verse_data)
+        print(' - Converting GloVe Vectors...')
         self.verse_data = self.convert_to_glove_vectors(self.verse_data)
+        print(' - Creating Cosine Similarity Matrix...')
         self.sim_matrix = cosine_similarity(
             [verse['vector'] for verse in self.verse_data])
 
@@ -95,7 +99,7 @@ class Similarity(object):
             for word in verse['tokenized_text'][:MAX_LEN]:
                 try:
                     vector = np.append(vector, self.get_glove_vector(word))
-                except KeyError:
+                except ValueError:
                     vector = np.append(vector, np.zeros(200))
             if vector.shape[0] < MAX_LEN * 200:
                 vector = np.append(vector, np.zeros(

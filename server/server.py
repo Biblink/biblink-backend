@@ -9,8 +9,11 @@ from similarity_functions import Similarity
 
 APP = Flask(__name__)
 BIBLE_FILE = '../bible-files/english-web-bible.json'
+GLOVE_FILE = '../dl-files/glove.6B.200d.txt'
+print('Initializing Bible Class...')
 BIBLE = Bible(BIBLE_FILE)
-SIMILARITY = Similarity(BIBLE_FILE)
+print('Initializing Similarity Class...')
+SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE)
 
 
 @APP.route('/query')
@@ -59,9 +62,9 @@ def compute_similarity():
         response is below::
 
             {
-                'data': (list),
-                'query': (str),
-                'query_id': (int),
+                'similar_verses': (list),
+                'verse': (str),
+                'similarity_id': (int),
                 'url': (str)
             }
 
@@ -72,16 +75,18 @@ def compute_similarity():
     response['reference'] = query
     matched_query = BIBLE.parse_query(query)
     assert len(matched_query['queries']) == 1
-    matched_query['queries'] = matched_query['queries'][0]
+    matched_query = matched_query['queries'][0]
     temp_var = BIBLE.get_data(matched_query['book'],
-                              temp_data['chapter'],
-                              temp_data['verses'])
+                              matched_query['chapter'],
+                              matched_query['verses'])
+    assert len(temp_var['verse_data']) == 1
+    print(temp_var['verse_data'][0])
     response['similar_verses'] = SIMILARITY.get_similar_values(
-        temp_var['combined_text'])
+        temp_var['verse_data'][0]['verse'])
     response['verse'] = temp_var
-    response['data'] = results_list
     return jsonify(response)
 
 
 if __name__ == '__main__':
+    print('Initializing Server...')
     APP.run(port=5000)
