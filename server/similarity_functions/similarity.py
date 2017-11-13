@@ -15,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 MAX_LEN = 24
 
+
 class Similarity(object):
     """Similarity class that utilizes deep learning to find similar verses
 
@@ -47,7 +48,8 @@ class Similarity(object):
         self.exclude = set(string.punctuation)
         self.tokenize_data(self.verse_data)
         self.verse_data = self.convert_to_glove_vectors(self.verse_data)
-        self.sim_matrix = cosine_similarity([verse['vector'] for verse in self.verse_data])
+        self.sim_matrix = cosine_similarity(
+            [verse['vector'] for verse in self.verse_data])
 
     def tokenize_data(self, verse_data):
         """Tokenizes passed in verse data
@@ -75,7 +77,7 @@ class Similarity(object):
 
         Args:
             verse_data (dict): verse_data run after tokenized_data
-        
+
         Returns:
             verse_data_with_glove (dict): verse_data with GloVe vectors
             response is below::
@@ -96,7 +98,8 @@ class Similarity(object):
                 except KeyError:
                     vector = np.append(vector, np.zeros(200))
             if vector.shape[0] < MAX_LEN * 200:
-                vector = np.append(vector, np.zeros([MAX_LEN * 200 - vector.shape[0]]))
+                vector = np.append(vector, np.zeros(
+                    [MAX_LEN * 200 - vector.shape[0]]))
             verse['vector'] = vector
             verse_data_with_glove.append(verse)
         return verse_data_with_glove
@@ -107,17 +110,18 @@ class Similarity(object):
 
         Args:
             word (str): word to find vector for
-        
+
         Returns:
             (list): the GloVe representation of word
-        
+
         Raises:
             ValueError: if word is not found in embeddings
         """
         try:
             return self.glove_words.loc[word].as_matrix()
         except KeyError:
-            self._throw_value_error('{0} was not found in the glove embeddings.'.format(word))
+            self._throw_value_error(
+                '{0} was not found in the glove embeddings.'.format(word))
 
     def get_similar_values(self, verse, total_values=10):
         """Gets similar values using GloVe and Cosine Sim.
@@ -127,7 +131,7 @@ class Similarity(object):
         Args:
             verse (str): verse reference (i.e. 'Genesis 1:1' or 'Exodus 2:3')
             total_values (int | optional): number of values to return
-        
+
         Returns:
             final_text (list): list of similar verses
             response is below::
