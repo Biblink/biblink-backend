@@ -7,12 +7,14 @@ import os
 import string
 import json
 import csv
+import copy
 import pandas as pd
 import numpy as np
-import copy
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
+nltk.download('stopwords')
 
 MAX_LEN = 24
 
