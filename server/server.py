@@ -75,15 +75,14 @@ def compute_similarity():
     response['reference'] = query
     matched_query = BIBLE.parse_query(query)
     assert len(matched_query['queries']) == 1
-    matched_query = matched_query['queries'][0]
+    queries = matched_query['queries'][0]
     temp_var = BIBLE.get_data(matched_query['book'],
-                              matched_query['chapter'],
-                              matched_query['verses'])
+                              queries['chapter'],
+                              queries['verses'])
     assert len(temp_var['verse_data']) == 1
-    print(temp_var['verse_data'][0])
     response['similar_verses'] = SIMILARITY.get_similar_values(
         temp_var['verse_data'][0]['verse'])
-    response['verse'] = temp_var
+    response['verse'] = temp_var['verse_data'][0]
     return jsonify(response)
 
 

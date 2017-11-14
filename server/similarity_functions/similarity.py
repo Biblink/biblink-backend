@@ -9,6 +9,7 @@ import json
 import csv
 import pandas as pd
 import numpy as np
+import copy
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
@@ -31,6 +32,7 @@ class Similarity(object):
             self.bible_data = json.load(
                 open(bible_file, encoding='utf-8-sig'))
             self.verse_data = []
+            self.bible_verses = []
         else:
             self._throw_value_error('Please enter a proper bible .json file')
         print(' - Loading GloVe File...')
@@ -47,10 +49,13 @@ class Similarity(object):
         # preprocess text corpus
         self.stopwords_list = set(stopwords.words('english'))
         self.exclude = set(string.punctuation)
+        self.bible_verses = copy.deepcopy(self.verse_data)
         print(' - Tokenizing Data...')
-        self.tokenize_data(self.verse_data)
+        self.verse_data = self.tokenize_data(self.verse_data)
+        assert self.verse_data[0].keys() != self.bible_verses[0].keys()
         print(' - Converting GloVe Vectors...')
         self.verse_data = self.convert_to_glove_vectors(self.verse_data)
+        assert self.verse_data[0].keys() != self.bible_verses[0].keys()
         print(' - Creating Cosine Similarity Matrix...')
         self.sim_matrix = cosine_similarity(
             [verse['vector'] for verse in self.verse_data])
@@ -62,6 +67,7 @@ class Similarity(object):
         Args:
             verse_data (dict): dictionary of verse data
         """
+        tokenized_result = []
         for verse in verse_data:
             text = ''.join(
                 ch for ch in verse['text'] if ch not in self.exclude)
@@ -73,6 +79,8 @@ class Similarity(object):
                         val = val.replace('Yahweh', 'God')
                     final_text.append(val)
             verse['tokenized_text'] = final_text
+            tokenized_result.append(verse)
+        return tokenized_result
 
     def convert_to_glove_vectors(self, verse_data):
         """Converts verse tokenized text into GloVe vectors
@@ -104,7 +112,7 @@ class Similarity(object):
             if vector.shape[0] < MAX_LEN * 200:
                 vector = np.append(vector, np.zeros(
                     [MAX_LEN * 200 - vector.shape[0]]))
-            verse['vector'] = vector
+            verse['vector'] = list(vector)
             verse_data_with_glove.append(verse)
         return verse_data_with_glove
 
@@ -145,7 +153,6 @@ class Similarity(object):
                         'verse_number': (str),
                         'text': (str),
                         'tokenized_text': (list),
-                        'vector': (list)
                     }
                     ...
                 ] (length of list = total_values)
@@ -158,9 +165,9 @@ class Similarity(object):
         sim_text = self.sim_matrix[proper_index][1:]
         final_text = []
         final_indices = list(reversed(np.argsort(sim_text)))[:total_values]
-        for index in final_indices:
-            final_text.append(self.verse_data[index])
-        return final_text
+        for i in final_indices:
+            final_text.append(self.bible_verses[i])
+        return list(final_text)
 
     @staticmethod
     def _check_file(file_path, ending):
