@@ -16,8 +16,9 @@
 * ~~Implement Bible API Server~~
 * ~~Finish Commenting Files~~
 * ~~Implement Paragraph2Vec Algorithm~~
-* Add DL API To Existing Server
+* ~~Add DL API To Existing Server~~
 * Implement Unit Tests
+* Implement Logging
 
 
 ## Setup List
