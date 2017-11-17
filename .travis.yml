@@ -1,8 +1,9 @@
 language: python
 python:
     - 3.6.2
+before_install:
+  - curl https://file.io/EKobsJ > dl-files/glove.6B.200d.txt 
 install:
   - pip install -r server/requirements.txt
-  - curl https://file.io/EKobsJ > dl-files
 script:
   - cd server && pytest
