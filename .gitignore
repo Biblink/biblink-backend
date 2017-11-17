@@ -6,3 +6,4 @@ Old Scripts/
 glove.6B/
 *.txt
 *.model
+.cache

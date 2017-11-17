@@ -2,10 +2,9 @@
 """Bible class to handle communication with bible.json
 
 Author: Brandon Fan
-Last Edit Date: 11/5/2017
+Last Edit Date: 11/17/2017
 Todo:
     * implement @property functions
-    * finish python documentation
 """
 import json
 import os
@@ -63,7 +62,7 @@ class Bible(object):
         """
         # create return response
         response = {'book': '', 'queries': []}
-        string_query = re.sub(r'[\'\"]', '', string_query)
+        string_query = re.sub(r'[\'\"\.]', '', string_query)
         # match query with regular expression
         match = self._query_parser.match(string_query)
         if not match:
@@ -157,7 +156,7 @@ class Bible(object):
         Raises:
             ValueError: if book name is not a proper string
         """
-        response = {'verse_data': []}
+        response = {'id': None, 'verse_data': []}
         response['id'] = random.randint(1, 1000000)
         if not isinstance(book, str):
             self._throw_value_error(

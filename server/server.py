@@ -1,6 +1,7 @@
-"""Server to run Bible python API
+"""Server to run bible python API
+
 Authors: Brandon Fan, Jordan Seiler
-Last Edit Date: 11/5/2017
+Last Edit Date: 11/16/2017
 """
 import random
 from flask import Flask, request, jsonify
