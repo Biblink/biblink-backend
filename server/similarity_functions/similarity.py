@@ -17,6 +17,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
 nltk.download('stopwords')
+nltk.download('punkt')
 
 MAX_LEN = 24
 
