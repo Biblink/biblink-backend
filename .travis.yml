@@ -5,5 +5,7 @@ before_install:
   - mkdir dl-files && curl -o dl-files/glove.6B.200d.txt https://file.io/EKobsJ
 install:
   - pip install -r server/requirements.txt
+before_script:
+  - cd server
 script:
-  - travis_wait cd server && pytest
+  - travis_wait pytest
