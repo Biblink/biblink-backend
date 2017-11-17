@@ -6,4 +6,4 @@ before_install:
 install:
   - pip install -r server/requirements.txt
 script:
-  - cd server && pytest
+  - travis_wait cd server && pytest
