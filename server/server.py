@@ -5,12 +5,14 @@ Last Edit Date: 11/16/2017
 """
 import random
 from flask import Flask, request, jsonify
-from bible_functions import Bible
-from similarity_functions import Similarity
+from .bible_functions import Bible
+from .similarity_functions import Similarity
 
 APP = Flask(__name__)
-BIBLE_FILE = '../bible-files/english-web-bible.json'
-GLOVE_FILE = '../dl-files/glove.6B.200d.txt'
+
+# paths from running from heroku outside of folder
+BIBLE_FILE = './bible-files/english-web-bible.json'
+GLOVE_FILE = './dl-files/glove.6B.200d.txt'
 print('Initializing Bible Class...')
 BIBLE = Bible(BIBLE_FILE)
 print('Initializing Similarity Class...')
