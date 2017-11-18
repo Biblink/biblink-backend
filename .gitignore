@@ -7,3 +7,5 @@ glove.6B/
 **/files/*.txt
 *.model
 .cache
+*.pyc
+.cache
