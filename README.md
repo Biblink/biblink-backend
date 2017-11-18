@@ -10,15 +10,7 @@
 <b>Authors:</b> bfan1256, JDS0530 
 
 ## TODO List
-* ~~Create Initial README.md~~
-* ~~Create Initial Folder Structure~~
-* ~~Implement Functions for Bible Processing~~
-* ~~Implement Bible API Server~~
-* ~~Finish Commenting Files~~
-* ~~Implement Paragraph2Vec Algorithm~~
-* ~~Add DL API To Existing Server~~
-* Implement Unit Tests
-* Implement Logging
+* Implement Flask Logging
 
 
 ## Setup List
