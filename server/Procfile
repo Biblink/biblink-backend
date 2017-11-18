@@ -1,1 +1,0 @@
-web: curl https://transfer.sh/jyaQx/bcf-bsb-glove.txt -o ./files/glove.6B.200d.txt && gunicorn server:APP --preload -t 300 --log-file=-
