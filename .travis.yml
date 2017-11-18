@@ -16,4 +16,3 @@ deploy:
   app: bcf-217-bsb
   run: 
     - curl -o ./files/glove.6B.200d.txt https://file.io/EKobsJ
-    -
