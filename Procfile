@@ -1,1 +1,0 @@
-web: gunicorn server.server:APP --workers=2 --preload -t 300
