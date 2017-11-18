@@ -10,7 +10,6 @@ import string
 import json
 import csv
 import copy
-import pandas as pd
 import numpy as np
 import nltk
 from nltk.tokenize import word_tokenize
@@ -35,6 +34,7 @@ class Similarity(object):
 
     def __init__(self, bible_file, glove_file, _testing=False, initialize=True):
         self.glove_file = glove_file
+        self.glove_words = {}
         if self._check_file(bible_file, '.json'):
             self.bible_data = json.load(
                 open(bible_file, encoding='utf-8-sig'))
@@ -52,14 +52,16 @@ class Similarity(object):
                 print('**** Warning Using Testing Environment ****')
                 print(' - Generating Test Similarity Matrix...')
                 self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
-                return
-            
+                return    
     def initialize(self):
         print(' - Loading GloVe File...')
         if self._check_file(self.glove_file, '.txt'):
-            self.glove_words = pd.read_table(self.glove_file,
-                                             sep=" ", index_col=0,
-                                             header=None, quoting=csv.QUOTE_NONE)
+            with open(self.glove_file) as f:
+                for line in list(f.readlines()):
+                    split = line.split()
+                    word = split[0]
+                    data = np.array([float(i) for i in split[1:]])
+                    self.glove_words[word] = data
         else:
             self._throw_value_error(
                 'Please enter a proper glove .txt file')
@@ -147,7 +149,7 @@ class Similarity(object):
             ValueError: if word is not found in embeddings
         """
         try:
-            return self.glove_words.loc[word].as_matrix()
+            return self.glove_words[word]
         except KeyError:
             self._throw_value_error(
                 '{0} was not found in the glove embeddings.'.format(word))
@@ -193,3 +195,7 @@ class Similarity(object):
     @staticmethod
     def _throw_value_error(information):
         raise ValueError(information)
+
+if __name__ == '__main__':
+    SIM = Similarity('../files/english-web-bible.json', '../files/glove.6B.200d.txt', initialize=False)
+    SIM.initialize()
