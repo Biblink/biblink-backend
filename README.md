@@ -23,7 +23,9 @@
 1. Install [Python](https://www.anaconda.com/download/)
 2. `cd ./server`
 3. `pip install -r requirements.txt`
-4. `python server.py`
+4. `cd server`
+5. `curl https://transfer.sh/jyaQx/bcf-bsb-glove.txt -o ./files/glove.6B.200d.txt` in Unix Terminal
+6. `python server.py`
 
 ### 3. Running Python Unit Tests
 1. Simply run `pytest` from terminal and pytest will handle it all for you
