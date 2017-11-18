@@ -1,2 +1,9 @@
 .vscode
 *.lock
+__pycache__
+.ipynb_checkpoints
+Old Scripts/
+glove.6B/
+*.txt
+*.model
+.cache
