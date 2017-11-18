@@ -27,6 +27,9 @@
 
 ### 3. Running Python Unit Tests
 1. Simply run `pytest` from terminal and pytest will handle it all for you
+
+### Optional: Using Gunicorn for Server
+1. Run `gunicorn server:APP --preload -t 300 --log-file=- --worker=2` in terminal
 ## Resources
 
 [Building a Basic RESTful API in Python ](https://www.codementor.io/sagaragarwal94/building-a-basic-restful-api-in-python-58k02xsiq)

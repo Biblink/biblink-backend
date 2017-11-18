@@ -52,7 +52,8 @@ class Similarity(object):
                 print('**** Warning Using Testing Environment ****')
                 print(' - Generating Test Similarity Matrix...')
                 self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
-                return    
+                return
+            self.initialize()
     def initialize(self):
         print(' - Loading GloVe File...')
         if self._check_file(self.glove_file, '.txt'):
