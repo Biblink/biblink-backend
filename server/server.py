@@ -11,8 +11,8 @@ from .similarity_functions import Similarity
 APP = Flask(__name__)
 
 # paths from running from heroku outside of folder
-BIBLE_FILE = './bible-files/english-web-bible.json'
-GLOVE_FILE = './dl-files/glove.6B.200d.txt'
+BIBLE_FILE = './files/english-web-bible.json'
+GLOVE_FILE = './files/glove.6B.200d.txt'
 print('Initializing Bible Class...')
 BIBLE = Bible(BIBLE_FILE)
 print('Initializing Similarity Class...')

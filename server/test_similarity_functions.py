@@ -6,8 +6,9 @@ Last Edit Date: 11/17/2017
 """
 
 from similarity_functions import Similarity
-SIM = Similarity('../bible-files/english-web-bible.json',
-                 '../dl-files/glove.6B.200d.txt', _testing=True)
+SIM = Similarity('./files/english-web-bible.json',
+                 './files/glove.6B.200d.txt', _testing=True)
+
 
 def test_similarity():
     """Tests similarity values and see if function is returning proper values"""
