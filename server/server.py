@@ -93,7 +93,7 @@ def compute_similarity():
 def _initiate_similarity():
     print('Initializing Similarity....')
     SIMILARITY.initialize()
-
+    print('Finished Initialization...')
 
 if __name__ == '__main__':
     print('Initializing Server...')
