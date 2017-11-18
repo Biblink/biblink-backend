@@ -5,8 +5,8 @@ Last Edit Date: 11/16/2017
 """
 import random
 from flask import Flask, request, jsonify
-from .bible_functions import Bible
-from .similarity_functions import Similarity
+from bible_functions import Bible
+from similarity_functions import Similarity
 
 APP = Flask(__name__)
 
