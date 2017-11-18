@@ -1,6 +1,6 @@
 from similarity_functions import Similarity
 SIM = Similarity('../bible-files/english-web-bible.json',
-                 '../dl-files/glove.6B.200d.txt')
+                 '../dl-files/glove.6B.200d.txt', _testing=True)
 
 def test_similarity():
     values = SIM.get_similar_values('Genesis 1:1', total_values=20)

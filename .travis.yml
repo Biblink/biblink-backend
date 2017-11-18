@@ -8,4 +8,4 @@ install:
 before_script:
   - cd server
 script:
-  - travis_wait 30 pytest
+  - pytest -n 4

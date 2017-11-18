@@ -29,10 +29,11 @@ class Similarity(object):
 
     Attributes:
         bible_file (str): Bible file path to load JSON file.
-        use_nltk (bool | optional): Whether or not to use nltk processing
+        glove_file (str): GloVe file path to load text file.
+        _testing (boolean | optional): creates dummy matrix for testing purposes (i.e. Travis CI)
     """
 
-    def __init__(self, bible_file, glove_file):
+    def __init__(self, bible_file, glove_file, _testing=False):
         if self._check_file(bible_file, '.json'):
             self.bible_data = json.load(
                 open(bible_file, encoding='utf-8-sig'))
@@ -40,6 +41,17 @@ class Similarity(object):
             self.bible_verses = []
         else:
             self._throw_value_error('Please enter a proper bible .json file')
+        for book in self.bible_data:
+            for chapter in book['data']:
+                for verses in chapter['verses']:
+                    self.verse_data.append(verses)
+        if _testing:
+            self.bible_verses = self.verse_data
+            print('**** Warning Using Testing Environment ****')
+            print(' - Generating Test Similarity Matrix...')
+            self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
+            return
+            
         print(' - Loading GloVe File...')
         if self._check_file(glove_file, '.txt'):
             self.glove_words = pd.read_table(glove_file,
@@ -47,14 +59,11 @@ class Similarity(object):
                                              header=None, quoting=csv.QUOTE_NONE)
         else:
             self._throw_value_error('Please enter a proper glove .txt file')
-        for book in self.bible_data:
-            for chapter in book['data']:
-                for verses in chapter['verses']:
-                    self.verse_data.append(verses)
+
         # preprocess text corpus
+        self.bible_verses = copy.deepcopy(self.verse_data)
         self.stopwords_list = set(stopwords.words('english'))
         self.exclude = set(string.punctuation)
-        self.bible_verses = copy.deepcopy(self.verse_data)
         print(' - Tokenizing Data...')
         self.verse_data = self.tokenize_data(self.verse_data)
         assert self.verse_data[0].keys() != self.bible_verses[0].keys()
@@ -140,7 +149,7 @@ class Similarity(object):
             self._throw_value_error(
                 '{0} was not found in the glove embeddings.'.format(word))
 
-    def get_similar_values(self, verse, total_values=10):
+    def get_similar_values(self, verse, total_values=10, _testing=False):
         """Gets similar values using GloVe and Cosine Sim.
         Uses GloVe embeddings and cosine similarity matrix to find
         similar bible verses
@@ -181,3 +190,6 @@ class Similarity(object):
     @staticmethod
     def _throw_value_error(information):
         raise ValueError(information)
+
+if __name__ == '__main__':
+    sim = Similarity('../../bible-files/english-web-bible.json', '../../dl-files/glove.6B.200d.txt', _testing=True)
