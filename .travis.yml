@@ -1,8 +1,6 @@
 language: python
 python:
   - 3.6.2
-before_install:
-  - curl -o server/files/glove.6B.200d.txt https://file.io/EKobsJ
 install:
   - pip install -r server/requirements.txt
 before_script:
@@ -15,4 +13,4 @@ deploy:
     secure: rz1FSNtj8d9uSuni1J3SWkp3zzWwUqCHnsSUr4XV3R8ZvmSPVepZj1hhtGxEMmRWW5WPFEPb6hTN1wfc4U7St2QVTsKsr06cNc3R4oEHqIadjuizCJSNo4D+RnLrXhWR5pupqT+SdUNDRnGKfGUtMSgQWh00lk6IRg0fJ6uv5UI1ZE7spevDnFg1RkHt5zXJ29SLFOBenfvfiucMpp2qNxzqNZ+Jx8i/aike+nh3/f53xYHxypULeai0vo6Rl0OxwRyC6WHKPXt3/2ZDiZSRYXBHC1XqjdKBkJxYulpIWba9WMJ9EXO3C6yZHTCB5ZElBEzHo20aYkxXnAHV3V4zgLIKC917iMUIIUfL56FeB4NDOGQqgBP1nJPamipQV6ph4LsXPHOtOcqaGIehdO9gk39tUenV+/ElXnz17gBbJ23cfuDc4jQCL8OVfZqWmzxmZZIfZ7YM5T/GKzJgIluCldepkN1fyrh+DMGwNnCO4yFpFgd2OnQQ0b5sBaASeByIvp0pHfYaOA2INL+4o+5cEGw3TL712KfSth5DwDEciPA3Uqvm/f0J1pKsJB54Qu9yCBYjuWMgEGR8/4O2ktc2+VvRX5jsKxIsLageJYkEZOPzG3Kcija3HKwnkMDs1ihbRziD0D/YJUbYr1L+eWI7dl+oruKURSK4MkXwkEtiy7w=
   app: bcf-217-bsb
   run: 
-    - curl -o ./files/glove.6B.200d.txt https://file.io/EKobsJ
+    - 'curl -o ./files/glove.6B.200d.txt -H "Authorization: Bearer ya29.GlsIBcDMANvVgbW93y-vbMrRffyxzQzK3OaNn4REO2iA6mnDOT7nQGu25iSjKt2VObWSHk80xqIJEAh1ZMwOl4QU7MHNHjk9VPcctdOVIK6t4mjpm94Z8ty5CxyP" https://www.googleapis.com/drive/v3/files/1SCQxMOHivnEUaqKV8_qYccmhA89hPVVj?alt=media'
