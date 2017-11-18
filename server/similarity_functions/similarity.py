@@ -33,7 +33,8 @@ class Similarity(object):
         _testing (boolean | optional): creates dummy matrix for testing purposes (i.e. Travis CI)
     """
 
-    def __init__(self, bible_file, glove_file, _testing=False):
+    def __init__(self, bible_file, glove_file, _testing=False, initialize=True):
+        self.glove_file = glove_file
         if self._check_file(bible_file, '.json'):
             self.bible_data = json.load(
                 open(bible_file, encoding='utf-8-sig'))
@@ -45,19 +46,23 @@ class Similarity(object):
             for chapter in book['data']:
                 for verses in chapter['verses']:
                     self.verse_data.append(verses)
-        if _testing:
-            self.bible_verses = self.verse_data
-            print('**** Warning Using Testing Environment ****')
-            print(' - Generating Test Similarity Matrix...')
-            self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
-            return
+        if initialize:
+            if _testing:
+                self.bible_verses = self.verse_data
+                print('**** Warning Using Testing Environment ****')
+                print(' - Generating Test Similarity Matrix...')
+                self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
+                return
+            
+    def initialize(self):
         print(' - Loading GloVe File...')
-        if self._check_file(glove_file, '.txt'):
-            self.glove_words = pd.read_table(glove_file,
+        if self._check_file(self.glove_file, '.txt'):
+            self.glove_words = pd.read_table(self.glove_file,
                                              sep=" ", index_col=0,
                                              header=None, quoting=csv.QUOTE_NONE)
         else:
-            self._throw_value_error('Please enter a proper glove .txt file')
+            self._throw_value_error(
+                'Please enter a proper glove .txt file')
 
         # preprocess text corpus
         self.bible_verses = copy.deepcopy(self.verse_data)
@@ -72,7 +77,6 @@ class Similarity(object):
         print(' - Creating Cosine Similarity Matrix...')
         self.sim_matrix = cosine_similarity(
             [verse['vector'] for verse in self.verse_data])
-
     def tokenize_data(self, verse_data):
         """Tokenizes passed in verse data
         Uses nltk word_tokenize to tokenize sentences into words

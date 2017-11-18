@@ -17,7 +17,7 @@ GLOVE_FILE = './files/glove.6B.200d.txt'
 print('Initializing Bible Class...')
 BIBLE = Bible(BIBLE_FILE)
 print('Initializing Similarity Class...')
-SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE)
+SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE, initialize=False)
 
 
 @APP.route('/query')
@@ -89,8 +89,14 @@ def compute_similarity():
     response['verse'] = temp_var['verse_data'][0]
     return jsonify(response)
 
+@APP.before_first_request
+def _initiate_similarity():
+    print('Initializing Similarity....')
+    SIMILARITY.initialize()
+
 
 if __name__ == '__main__':
     print('Initializing Server...')
     PORT = int(os.environ.get("PORT", 5000))
     APP.run(host='0.0.0.0', port=PORT)
+    print('here')
