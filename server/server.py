@@ -4,6 +4,7 @@ Authors: Brandon Fan, Jordan Seiler
 Last Edit Date: 11/16/2017
 """
 import random
+import os
 from flask import Flask, request, jsonify
 from bible_functions import Bible
 from similarity_functions import Similarity
@@ -91,4 +92,5 @@ def compute_similarity():
 
 if __name__ == '__main__':
     print('Initializing Server...')
-    APP.run(port=5000)
+    PORT = int(os.environ.get("PORT", 5000))
+    APP.run(port=PORT)
