@@ -51,7 +51,6 @@ class Similarity(object):
             print(' - Generating Test Similarity Matrix...')
             self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
             return
-            
         print(' - Loading GloVe File...')
         if self._check_file(glove_file, '.txt'):
             self.glove_words = pd.read_table(glove_file,
@@ -190,6 +189,3 @@ class Similarity(object):
     @staticmethod
     def _throw_value_error(information):
         raise ValueError(information)
-
-if __name__ == '__main__':
-    sim = Similarity('../../bible-files/english-web-bible.json', '../../dl-files/glove.6B.200d.txt', _testing=True)
