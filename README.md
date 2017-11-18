@@ -24,6 +24,9 @@
 2. `cd ./server`
 3. `pip install -r requirements.txt`
 4. `python server.py`
+
+### 3. Runnning Python Unit Tests
+1. Simply run `pytest` from terminal and pytest will handle it all for you
 ## Resources
 
 [Building a Basic RESTful API in Python ](https://www.codementor.io/sagaragarwal94/building-a-basic-restful-api-in-python-58k02xsiq)
