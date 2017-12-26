@@ -6,4 +6,4 @@ install:
 before_script:
   - cd server
 script:
-  - pytest -n 4
+  - pytest --ignore=test_es_functions.py -n 4
