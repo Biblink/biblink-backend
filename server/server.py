@@ -1,13 +1,15 @@
 """Server to run bible python API
 
 Authors: Brandon Fan, Jordan Seiler
-Last Edit Date: 11/16/2017
+Last Edit Date: 12/26/2017
 """
-import random
+
+import uuid
 import os
 from flask import Flask, request, jsonify
 from bible_functions import Bible
 from similarity_functions import Similarity
+from es_functions import SearchES
 
 APP = Flask(__name__)
 
@@ -18,7 +20,8 @@ print('Initializing Bible Class...')
 BIBLE = Bible(BIBLE_FILE)
 print('Initializing Similarity Class...')
 SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE, initialize=True)
-
+print('Initializing Elastic Search Class')
+ELASTICSEARCH = SearchES()
 
 @APP.route('/query')
 def process_query():
@@ -34,13 +37,13 @@ def process_query():
             {
                 'data': (list),
                 'query': (str),
-                'query_id': (int),
+                'query_id': (str),
                 'url': (str)
             }
 
     """
-    rand_num = random.randint(1, 1000000)
-    response = {'query_id': rand_num, 'url': request.url}
+    query_id = str(uuid.uuid4())
+    response = {'query_id': query_id, 'url': request.url}
     query = request.args.get('query')
     response['query'] = query
     matched_query = BIBLE.parse_query(query)
@@ -68,13 +71,13 @@ def compute_similarity():
             {
                 'similar_verses': (list),
                 'verse': (str),
-                'similarity_id': (int),
+                'similarity_id': (str),
                 'url': (str)
             }
 
     """
-    rand_num = random.randint(1, 1000000)
-    response = {'similarity_id': rand_num, 'url': request.url}
+    similarity_id = str(uuid.uuid4())
+    response = {'similarity_id': similarity_id, 'url': request.url}
     query = request.args.get('reference')
     response['reference'] = query
     matched_query = BIBLE.parse_query(query)
@@ -87,6 +90,34 @@ def compute_similarity():
     response['similar_verses'] = SIMILARITY.get_similar_values(
         temp_var['verse_data'][0]['verse'])
     response['verse'] = temp_var['verse_data'][0]
+    return jsonify(response)
+
+
+@APP.route('/search')
+def search_bible():
+    """Route to search for phrase or term in bible from /search route
+
+    Takes `term` parameter from /search route, and utilizes ElasticSearch to
+    to search bible for associated verse data
+
+    Returns:
+        (dict): response dictionary of requested data
+        response is below::
+
+            {
+                'results': (list),
+                'term': (str),
+                'search_id': (str),
+                'url': (str)
+            }
+
+    """
+    search_id = str(uuid.uuid4())
+    response = {'search_id': search_id, 'url': request.url} 
+    term = request.args.get('term')
+    response['term'] = term
+    results = ELASTICSEARCH.search(term)
+    response['results'] = results
     return jsonify(response)
 
 if __name__ == '__main__':
