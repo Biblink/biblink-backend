@@ -51,10 +51,12 @@ class Similarity(object):
                 self.bible_verses = self.verse_data
                 print('**** Warning Using Testing Environment ****')
                 print(' - Generating Test Similarity Matrix...')
-                self.sim_matrix = np.zeros((len(self.verse_data), len(self.verse_data)))
+                self.sim_matrix = np.zeros(
+                    (len(self.verse_data), len(self.verse_data)))
                 return
             self.initialize()
-    def initialize(self):
+
+    def initialize(self, create_matrix=True):
         print(' - Loading GloVe File...')
         if self._check_file(self.glove_file, '.txt'):
             with open(self.glove_file) as f:
@@ -77,9 +79,11 @@ class Similarity(object):
         print(' - Converting GloVe Vectors...')
         self.verse_data = self.convert_to_glove_vectors(self.verse_data)
         assert self.verse_data[0].keys() != self.bible_verses[0].keys()
-        print(' - Creating Cosine Similarity Matrix...')
-        self.sim_matrix = cosine_similarity(
-            [verse['vector'] for verse in self.verse_data])
+        if create_matrix:
+            print(' - Creating Cosine Similarity Matrix...')
+            self.sim_matrix = cosine_similarity(
+                [verse['vector'] for verse in self.verse_data])
+
     def tokenize_data(self, verse_data):
         """Tokenizes passed in verse data
         Uses nltk word_tokenize to tokenize sentences into words
@@ -197,6 +201,8 @@ class Similarity(object):
     def _throw_value_error(information):
         raise ValueError(information)
 
+
 if __name__ == '__main__':
-    SIM = Similarity('../files/english-web-bible.json', '../files/glove.6B.200d.txt', initialize=False)
+    SIM = Similarity('../files/english-web-bible.json',
+                     '../files/glove.6B.200d.txt', initialize=False)
     SIM.initialize()
