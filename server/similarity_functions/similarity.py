@@ -33,7 +33,7 @@ class Similarity(object):
         _testing (boolean | optional): creates dummy matrix for testing purposes (i.e. Travis CI)
     """
 
-    def __init__(self, bible_file, glove_file, _testing=False, initialize=True):
+    def __init__(self, bible_file, glove_file, matrix_path=None, _testing=False, initialize=True):
         self.glove_file = glove_file
         self.glove_words = {}
         if self._check_file(bible_file, '.json'):
@@ -55,9 +55,9 @@ class Similarity(object):
                 self.sim_matrix = np.zeros(
                     (len(self.verse_data), len(self.verse_data)))
                 return
-            self.initialize()
+            self.initialize(matrix_path=matrix_path)
 
-    def initialize(self, load_matrix=True, create_matrix=False):
+    def initialize(self, load_matrix=True, matrix_path=None, create_matrix=False):
         print(' - Loading GloVe File...')
         if self._check_file(self.glove_file, '.txt'):
             with open(self.glove_file, encoding='utf-8-sig') as f:
@@ -82,7 +82,7 @@ class Similarity(object):
         assert self.verse_data[0].keys() != self.bible_verses[0].keys()
         if load_matrix:
             print(' - Loading Cosine Similarity Matrix...')
-            self.sim_matrix = joblib.load('sim_matrix_50.pkl')
+            self.sim_matrix = joblib.load(matrix_path)
         if create_matrix:
             print(' - Creating Cosine Similarity Matrix...')
             entire_matrix = cosine_similarity(
