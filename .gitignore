@@ -10,3 +10,4 @@ glove.6B/
 *.pyc
 .cache
 elastic-search/
+sim_matrix.pkl

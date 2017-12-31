@@ -15,6 +15,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.externals import joblib
 nltk.download('stopwords')
 nltk.download('punkt')
 
@@ -56,10 +57,10 @@ class Similarity(object):
                 return
             self.initialize()
 
-    def initialize(self, create_matrix=True):
+    def initialize(self, load_matrix=False, create_matrix=True):
         print(' - Loading GloVe File...')
         if self._check_file(self.glove_file, '.txt'):
-            with open(self.glove_file) as f:
+            with open(self.glove_file, encoding='utf-8-sig') as f:
                 for line in list(f.readlines()):
                     split = line.split()
                     word = split[0]
@@ -79,10 +80,18 @@ class Similarity(object):
         print(' - Converting GloVe Vectors...')
         self.verse_data = self.convert_to_glove_vectors(self.verse_data)
         assert self.verse_data[0].keys() != self.bible_verses[0].keys()
+        if load_matrix:
+            print(' - Loading Cosine Similarity Matrix...')
+            self.sim_matrix = joblib.load('sim_matrix_50.pkl')
         if create_matrix:
             print(' - Creating Cosine Similarity Matrix...')
-            self.sim_matrix = cosine_similarity(
+            entire_matrix = cosine_similarity(
                 [verse['vector'] for verse in self.verse_data])
+            self.sim_matrix = []
+            for value in entire_matrix:
+                results = list(reversed(np.argsort(value[1:])))[:50]
+                self.sim_matrix.append(results)
+            joblib.dump(self.sim_matrix, 'sim_matrix_50.pkl')
 
     def tokenize_data(self, verse_data):
         """Tokenizes passed in verse data
@@ -186,10 +195,9 @@ class Similarity(object):
             if verse_text['verse'] == verse:
                 proper_index = index
                 break
-        sim_text = self.sim_matrix[proper_index][1:]
+        sim_indices = self.sim_matrix[proper_index]
         final_text = []
-        final_indices = list(reversed(np.argsort(sim_text)))[:total_values]
-        for i in final_indices:
+        for i in sim_indices:
             final_text.append(self.bible_verses[i])
         return list(final_text)
 
@@ -206,3 +214,4 @@ if __name__ == '__main__':
     SIM = Similarity('../files/english-web-bible.json',
                      '../files/glove.6B.200d.txt', initialize=False)
     SIM.initialize()
+    SIM.get_similar_values('Genesis 1:1')
