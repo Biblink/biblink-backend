@@ -53,7 +53,7 @@ class Similarity(object):
                 print('**** Warning Using Testing Environment ****')
                 print(' - Generating Test Similarity Matrix...')
                 self.sim_matrix = np.zeros(
-                    (len(self.verse_data), len(self.verse_data)))
+                    (len(self.verse_data), len(self.verse_data)), dtype=int)
                 return
             self.initialize(matrix_path=matrix_path)
 
@@ -168,7 +168,7 @@ class Similarity(object):
             self._throw_value_error(
                 '{0} was not found in the glove embeddings.'.format(word))
 
-    def get_similar_values(self, verse, total_values=10, _testing=False):
+    def get_similar_values(self, verse, total_values=10):
         """Gets similar values using GloVe and Cosine Sim.
         Uses GloVe embeddings and cosine similarity matrix to find
         similar bible verses
@@ -195,7 +195,7 @@ class Similarity(object):
             if verse_text['verse'] == verse:
                 proper_index = index
                 break
-        sim_indices = self.sim_matrix[proper_index]
+        sim_indices = self.sim_matrix[proper_index][:total_values]
         final_text = []
         for i in sim_indices:
             final_text.append(self.bible_verses[i])

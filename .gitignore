@@ -8,6 +8,7 @@ glove.6B/
 *.model
 .cache
 *.pyc
+*.log
 .cache
 elastic-search/
 sim_matrix.pkl
