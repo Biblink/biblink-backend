@@ -42,7 +42,8 @@
 
 ### 4. Running Python Unit Tests
 
-1. Simply run `pytest` from terminal and pytest will handle it all for you
+1. `cd server`
+2. Simply run `pytest` from terminal and pytest will handle it all for you
 
 ### Optional: Using Gunicorn for Server
 
