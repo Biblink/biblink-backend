@@ -57,7 +57,7 @@ class Similarity(object):
                 return
             self.initialize()
 
-    def initialize(self, load_matrix=False, create_matrix=True):
+    def initialize(self, load_matrix=True, create_matrix=False):
         print(' - Loading GloVe File...')
         if self._check_file(self.glove_file, '.txt'):
             with open(self.glove_file, encoding='utf-8-sig') as f:
