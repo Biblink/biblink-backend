@@ -26,7 +26,7 @@
 
 5. Download Zip Version of ElasticSearch from https://www.elastic.co/downloads/elasticsearch
 6. Unzip file
-7. cd into folder and run `bin/elasticsearch`
+7. cd into newly created folder and run `bin/elasticsearch`
 8. `cd server`
 9. `python create_es_index.py`
 
