@@ -2,7 +2,7 @@
 """Similarity Class to handle verse similarities
 
 Authors: Brandon Fan
-Last Edit Date: 11/16/2017
+Last Edit Date: 12/31/2017
 """
 
 import os

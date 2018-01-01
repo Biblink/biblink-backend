@@ -1,7 +1,7 @@
 """Server to run bible python API
 
 Authors: Brandon Fan, Jordan Seiler
-Last Edit Date: 12/26/2017
+Last Edit Date: 12/31/2017
 """
 
 import uuid
@@ -23,6 +23,7 @@ print('Initializing Similarity Class...')
 SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE, SIM_MATRIX, initialize=True)
 print('Initializing Elastic Search Class')
 ELASTICSEARCH = SearchES()
+
 
 @APP.route('/query')
 def process_query():
@@ -114,12 +115,13 @@ def search_bible():
 
     """
     search_id = str(uuid.uuid4())
-    response = {'search_id': search_id, 'url': request.url} 
+    response = {'search_id': search_id, 'url': request.url}
     term = request.args.get('term')
     response['term'] = term
     results = ELASTICSEARCH.search(term)
     response['results'] = results
     return jsonify(response)
+
 
 if __name__ == '__main__':
     print('Initializing Server...')
