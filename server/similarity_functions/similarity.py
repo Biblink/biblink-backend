@@ -53,7 +53,7 @@ class Similarity(object):
                 print('**** Warning Using Testing Environment ****')
                 print(' - Generating Test Similarity Matrix...')
                 self.sim_matrix = np.zeros(
-                    (len(self.verse_data), len(self.verse_data)), dtype=int)
+                    (50, 50), dtype=int)
                 return
             self.initialize(matrix_path=matrix_path)
 
