@@ -12,3 +12,4 @@ glove.6B/
 .cache
 elastic-search/
 sim_matrix.pkl
+.idea
