@@ -15,6 +15,7 @@ APP = Flask(__name__)
 
 # paths from running from heroku outside of folder
 BIBLE_FILE = './files/english-web-bible.json'
+BOOK_PATH = './files/books.txt'
 GLOVE_FILE = './files/glove.6B.200d.txt'
 SIM_MATRIX = './similarity_functions/sim_matrix_50.pkl'
 print('Initializing Bible Class...')
@@ -22,7 +23,7 @@ BIBLE = Bible(BIBLE_FILE)
 print('Initializing Similarity Class...')
 SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE, SIM_MATRIX, initialize=True)
 print('Initializing Elastic Search Class')
-ELASTICSEARCH = SearchES()
+ELASTICSEARCH = SearchES(BOOK_PATH)
 
 
 @APP.route('/query')

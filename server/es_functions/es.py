@@ -13,12 +13,18 @@ from fuzzywuzzy import fuzz
 import re
 
 class SearchES(object):
-    """Class to search using ElasticSearch"""
-    def __init__(self):
+    """Class to search using ElasticSearch"
+    Attributes:
+        books (list): List of books in the Protestant bible.
+        client (ElasticSearch): ElasticSearch client object.
+        verse_parser (Regex): Regular expression to parse a verse
+    """
+
+    def __init__(self, book_file_path):
         """initializes elasticsearch instance (note: must have ES instance running on localhost:9200)"""
-        self.books = open('books.txt').read().split('\n')
-        self.verse_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
+        self.books = open(book_file_path).read().split('\n')
         self.client = Elasticsearch()
+        self.verse_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
 
     def search(self, term):
         """Function to search elasticsearch index
@@ -45,7 +51,7 @@ class SearchES(object):
         match = self.verse_parser.match(term)
 
         if match:
-            query_string = search_definition.query('match', verse=term).execute()
+            query_string = Q('match', verse=term)
         else:
             book_match = max(list(map(lambda book: fuzz.ratio(term.strip().lower(), book), self.books)))
             sorted_books = list(reversed(sorted(self.books, key=lambda book: fuzz.ratio(term.strip().lower(), book))))
@@ -55,9 +61,7 @@ class SearchES(object):
             else:
                 query_string = Q(
                     'match_phrase', text={'query': term, 'slop': 2})
-
-        search_definition.query(query_string)
-        response = search_definition.execute()
+        response = search_definition.query(query_string).execute()
         final_response = []
         for hit in response.hits.hits:
             data = hit['_source']
@@ -66,6 +70,6 @@ class SearchES(object):
         return final_response
 
 if __name__ == '__main__':
-    TEST_SEARCH = SearchES()
-    TEST_RESPONSE = TEST_SEARCH.search('god')
+    TEST_SEARCH = SearchES('../files/books.txt')
+    TEST_RESPONSE = TEST_SEARCH.search('John 1:1')
     print(json.dumps(TEST_RESPONSE, indent=4))
