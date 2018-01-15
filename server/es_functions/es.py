@@ -2,7 +2,7 @@
 """SearchES Class to handle searching with ElasticSearch
 
 Authors: Brandon Fan
-Last Edit Date: 12/26/2017
+Last Edit Date: 1/15/2018
 """
 
 import json
@@ -52,20 +52,32 @@ class SearchES(object):
 
         if match:
             query_string = Q('match', verse=term)
+            response = search_definition.query(query_string).highlight('verse').execute()
+            highlight_param = 'verse'
         else:
             book_match = max(list(map(lambda book: fuzz.ratio(term.strip().lower(), book), self.books)))
             sorted_books = list(reversed(sorted(self.books, key=lambda book: fuzz.ratio(term.strip().lower(), book))))
             if book_match >= 60:
                 book_query = Q('bool', must=[Q('match', book=sorted_books[0])])
                 query_string = book_query
+                response = search_definition.query(query_string).highlight('book').execute()
+                highlight_param = 'book'
             else:
                 query_string = Q(
                     'match_phrase', text={'query': term, 'slop': 2})
-        response = search_definition.query(query_string).execute()
+                response = search_definition.query(query_string).highlight('text').execute()
+                highlight_param = 'text'
         final_response = []
         for hit in response.hits.hits:
             data = hit['_source']
             data['score'] = str(hit['_score'])
+            if highlight_param == 'text':
+                data['text'] = ' '.join(hit['highlight']['text']).strip()
+            elif highlight_param == 'book':
+                ref = data['verse'].split()[-1]
+                data['verse'] = ' '.join(hit['highlight']['book']).strip() + ' ' + ref
+            elif highlight_param == 'verse':
+                data['verse'] = ' '.join(hit['highlight']['verse']).strip()
             final_response.append(data)
         return final_response
 

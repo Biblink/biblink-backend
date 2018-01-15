@@ -1,12 +1,13 @@
 """Server to run bible python API
 
 Authors: Brandon Fan, Jordan Seiler
-Last Edit Date: 12/31/2017
+Last Edit Date: 1/15/2018
 """
 
 import uuid
 import os
-from flask import Flask, request, jsonify
+import json
+from flask import Flask, request, jsonify, Response
 from bible_functions import Bible
 from similarity_functions import Similarity
 from es_functions import SearchES
@@ -57,7 +58,9 @@ def process_query():
                                   temp_data['verses'])
         results_list.append(temp_var)
     response['data'] = results_list
-    return jsonify(response)
+    resp = Response(json.dumps(response), status=200, mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 
 @APP.route('/similarity')
@@ -93,7 +96,9 @@ def compute_similarity():
     response['similar_verses'] = SIMILARITY.get_similar_values(
         temp_var['verse_data'][0]['verse'])
     response['verse'] = temp_var['verse_data'][0]
-    return jsonify(response)
+    resp = Response(json.dumps(response), status=200, mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 
 @APP.route('/search')
@@ -121,7 +126,9 @@ def search_bible():
     response['term'] = term
     results = ELASTICSEARCH.search(term)
     response['results'] = results
-    return jsonify(response)
+    resp = Response(json.dumps(response), status=200, mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 
 if __name__ == '__main__':
