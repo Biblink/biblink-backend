@@ -9,11 +9,15 @@ import json
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
+from fuzzywuzzy import fuzz
+import re
 
 class SearchES(object):
     """Class to search using ElasticSearch"""
     def __init__(self):
         """initializes elasticsearch instance (note: must have ES instance running on localhost:9200)"""
+        self.books = open('books.txt').read().split('\n')
+        self.verse_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
         self.client = Elasticsearch()
 
     def search(self, term):
@@ -38,9 +42,21 @@ class SearchES(object):
         """
 
         search_definition = Search(using=self.client, index='bible-index')
-        query_string = Q(
-            'fuzzy', text={'value': term, 'fuzziness': 2, 'boost': 1.0})
-        search_definition = search_definition.query(query_string)
+        match = self.verse_parser.match(term)
+
+        if match:
+            query_string = search_definition.query('match', verse=term).execute()
+        else:
+            book_match = max(list(map(lambda book: fuzz.ratio(term.strip().lower(), book), self.books)))
+            sorted_books = list(reversed(sorted(self.books, key=lambda book: fuzz.ratio(term.strip().lower(), book))))
+            if book_match >= 60:
+                book_query = Q('bool', must=[Q('match', book=sorted_books[0])])
+                query_string = book_query
+            else:
+                query_string = Q(
+                    'match_phrase', text={'query': term, 'slop': 2})
+
+        search_definition.query(query_string)
         response = search_definition.execute()
         final_response = []
         for hit in response.hits.hits:

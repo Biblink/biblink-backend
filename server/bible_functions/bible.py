@@ -74,7 +74,7 @@ class Bible(object):
         if information[0] is None:
             information = information[1:]
         # get book value
-        response['book'] = ' '.join([i.strip() for i in information[:-1]])
+        response['book'] = ' '.join([i.strip() for i in information[:-1]]).capitalize()
         # split based on semicolons in verse info (i.e. 34:11; 45:32)
         chapter_verse_data = information[-1].split(';')
         for data in chapter_verse_data:

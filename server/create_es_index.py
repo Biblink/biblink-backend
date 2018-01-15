@@ -14,13 +14,15 @@ def create_index():
     bible_file_path = '../bible-files/english-web-bible.json'
     bible_file = open(bible_file_path, encoding='utf-8-sig')
     bible = json.load(bible_file)
+    bible_file.close()
     documents = []
     for index, book in enumerate(bible):
         book_data = book['data']
         for chapter_data in book_data:
             verses = chapter_data['verses']
-            verses['book_id'] = index
             for verse in verses:
+                verse['book_id'] = index
+                verse['book'] = book['name']
                 documents.append(verse)
 
     for document in documents:
