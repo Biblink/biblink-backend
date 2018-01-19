@@ -8,7 +8,7 @@ Last Edit Date: 11/17/2017
 import pytest
 from bible_functions import Bible
 
-BIBLE = Bible('./files/english-web-bible.json')
+BIBLE = Bible('./files/english-web-bible.json', './files/ot_authors_and_dates.csv', './files/nt_authors_and_dates.csv')
 BIBLE_DATA = BIBLE.get_book('Genesis')
 BIBLE_CHAPTER = BIBLE.get_chapter(BIBLE_DATA, '2')
 BIBLE_VERSES = BIBLE.get_verse(BIBLE_CHAPTER, '5')
