@@ -26,12 +26,13 @@ class SearchES(object):
         self.client = Elasticsearch()
         self.verse_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
 
-    def search(self, term):
+    def search(self, term, sort_type='relevant'):
         """Function to search elasticsearch index
         Takes a term or phrase argument and does fuzzy match query through elastic search upon bible
 
         Args:
             term (str): term or phrase to fuzzy search upon
+            sort_type (str): type of sort method ('relevant' | 'book')
         
         Returns:
             (dict): response dictionary with associated scores
@@ -65,7 +66,10 @@ class SearchES(object):
             else:
                 query_string = Q(
                     'match_phrase', text={'query': term, 'slop': 2})
-                response = search_definition.query(query_string).highlight('text').execute()
+                if sort_type == 'book':
+                    response = search_definition.sort('book_id').query(query_string).highlight('text').execute()
+                else:
+                    response = search_definition.query(query_string).highlight('text').execute()
                 highlight_param = 'text'
         final_response = []
         for hit in response.hits.hits:

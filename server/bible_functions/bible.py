@@ -232,7 +232,7 @@ class Bible(object):
         Raises:
             ValueError: if chapter is not a proper chapter in book
         """
-        if int(chapter) >= len(book_data['data']):
+        if int(chapter) > len(book_data['data']):
             self._throw_value_error('Please enter a proper ' +
                                     'chapter of the book: {0}'
                                     .format(book_data['name']))

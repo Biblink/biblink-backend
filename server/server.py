@@ -48,15 +48,26 @@ def process_query():
     """
     query_id = str(uuid.uuid4())
     response = {'query_id': query_id, 'url': request.url}
+
     query = request.args.get('query')
-    response['query'] = query
-    matched_query = BIBLE.parse_query(query)
-    results_list = []
-    for temp_data in matched_query['queries']:
-        temp_var = BIBLE.get_data(matched_query['book'],
-                                  temp_data['chapter'],
-                                  temp_data['verses'])
-        results_list.append(temp_var)
+    if query is not None:
+        parse_query = True
+    else:
+        parse_query = False
+    if not parse_query:
+        book = request.args.get('book')
+        chapter = request.args.get('chapter')
+    if parse_query:
+        response['query'] = query
+        matched_query = BIBLE.parse_query(query)
+        results_list = []
+        for temp_data in matched_query['queries']:
+            temp_var = BIBLE.get_data(matched_query['book'],
+                                      temp_data['chapter'],
+                                      temp_data['verses'])
+            results_list.append(temp_var)
+    else:
+        results_list = [BIBLE.get_data(book, chapter)]
     response['data'] = results_list
     resp = Response(json.dumps(response), status=200, mimetype='application/json')
     resp.headers['Access-Control-Allow-Origin'] = '*'
@@ -123,8 +134,12 @@ def search_bible():
     search_id = str(uuid.uuid4())
     response = {'search_id': search_id, 'url': request.url}
     term = request.args.get('term')
+    try:
+        sort_type = request.args.get('sort_type')
+    except Exception:
+        sort_type = 'relevant'
     response['term'] = term
-    results = ELASTICSEARCH.search(term)
+    results = ELASTICSEARCH.search(term, sort_type)
     response['results'] = results
     resp = Response(json.dumps(response), status=200, mimetype='application/json')
     resp.headers['Access-Control-Allow-Origin'] = '*'
