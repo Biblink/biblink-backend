@@ -17,10 +17,12 @@ APP = Flask(__name__)
 # paths from running from heroku outside of folder
 BIBLE_FILE = './files/english-web-bible.json'
 BOOK_PATH = './files/books.txt'
+OT_METADATA_PATH = './files/ot_authors_and_dates.csv'
+NT_METADATA_PATH = './files/nt_authors_and_dates.csv'
 GLOVE_FILE = './files/glove.6B.200d.txt'
 SIM_MATRIX = './similarity_functions/sim_matrix_50.pkl'
 print('Initializing Bible Class...')
-BIBLE = Bible(BIBLE_FILE)
+BIBLE = Bible(BIBLE_FILE, OT_METADATA_PATH, NT_METADATA_PATH)
 print('Initializing Similarity Class...')
 SIMILARITY = Similarity(BIBLE_FILE, GLOVE_FILE, SIM_MATRIX, initialize=True)
 print('Initializing Elastic Search Class')
@@ -107,6 +109,35 @@ def compute_similarity():
     response['similar_verses'] = SIMILARITY.get_similar_values(
         temp_var['verse_data'][0]['verse'])
     response['verse'] = temp_var['verse_data'][0]
+    resp = Response(json.dumps(response), status=200, mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+@APP.route('/metadata')
+def compute_metadata():
+    """Route to process verse similarities from /metadata route
+
+    Takes `book reference` parameter from /metadata route, and
+    returns metadata about book
+
+    Returns:
+        (dict): response dictionary of requested data
+        response is below::
+
+            {
+                'metadata': (dict),
+                'book': (str),
+                'metadata_id': (str),
+                'url': (str)
+            }
+
+    """
+    metadata_id = str(uuid.uuid4())
+    response = {'metadata_id': metadata_id, 'url': request.url}
+    query = request.args.get('book')
+    response['book'] = query
+    response['metadata'] = BIBLE.get_metadata(query)
     resp = Response(json.dumps(response), status=200, mimetype='application/json')
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp

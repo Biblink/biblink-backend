@@ -10,6 +10,7 @@ import json
 import os
 import random
 import re
+import csv
 
 
 class Bible(object):
@@ -24,7 +25,7 @@ class Bible(object):
         books (list): List of books in the Protestant bible.
     """
 
-    def __init__(self, bible_file_path):
+    def __init__(self, bible_file_path, nt_metadata_path, ot_metadata_path):
         if bible_file_path.endswith('.json') and os.path.isfile(bible_file_path):
             # grab json file
             bible_file = open(bible_file_path, encoding='utf-8-sig')
@@ -35,6 +36,25 @@ class Bible(object):
             self._throw_value_error('Please enter a proper .json file, you' +
                                     ' entered: {0}'
                                     .format(bible_file_path))
+        self.book_metadata = {}
+        if nt_metadata_path.endswith('.csv') and os.path.isfile(nt_metadata_path):
+            nt_file = open(nt_metadata_path, encoding='utf-8-sig')
+            nt_writer = csv.reader(nt_file)
+            for book_metadata in nt_writer:
+                book_name = book_metadata[0].strip()
+                self.book_metadata[book_name] = {}
+                self.book_metadata[book_name]['author'] = book_metadata[1].strip()
+                self.book_metadata[book_name]['date'] = book_metadata[2].strip()
+            nt_file.close()
+        if ot_metadata_path.endswith('.csv') and os.path.isfile(ot_metadata_path):
+            ot_file = open(ot_metadata_path, encoding='utf-8-sig')
+            ot_writer = csv.reader(ot_file)
+            for book_metadata in ot_writer:
+                book_name = book_metadata[0].strip()
+                self.book_metadata[book_name] = {}
+                self.book_metadata[book_name]['author'] = book_metadata[1].strip()
+                self.book_metadata[book_name]['date'] = book_metadata[2].strip()
+            ot_file.close()
         self.books = [book['name'].lower() for book in self.bible]
         self._query_parser = re.compile(r'(\d\s)?([\w\.]+)\s+([\d:,\-\s\;]+)')
 
@@ -112,7 +132,7 @@ class Bible(object):
         Reads in data from book parameter and retrieves the metadata
 
         Args:
-            book (dict): book data from get_book() function
+            book (string): book name
 
         Returns:
             (dict): dictionary of metadata
@@ -127,7 +147,7 @@ class Bible(object):
             ValueError: if book data is invalid
         """
         try:
-            return self.bible[self.books.index(book)]['metadata']
+            return self.book_metadata[book.strip()]
         except Exception:
             raise ValueError('Please provide a proper book data dictionary')
 
