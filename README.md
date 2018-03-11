@@ -1,6 +1,6 @@
 <div style="display: block; text-align:center" align="center"><img width="175px" alt="Biblya Logo" src="./color-logo.svg" /></div>
 
-# BCF 217 Bible Study Backend
+# Biblya Backend
 
 [![Build Status](https://travis-ci.org/bfan1256/bible-study-application-backend.svg?branch=master)](https://travis-ci.org/bfan1256/bible-study-application-backend)
 
