@@ -13,3 +13,4 @@ glove.6B/
 elastic-search/
 sim_matrix.pkl
 .idea
+node_modules/
