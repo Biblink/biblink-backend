@@ -1,4 +1,4 @@
-<div style="display: block; text-align:center" align="center"><img alt="BCF Logo" src="http://blacksburgchristianfellowship.org/wp-content/uploads/2017/01/yellow-mobile-logo.png" /></div>
+<div style="display: block; text-align:center" align="center"><img width="175px" alt="Biblya Logo" src="./color-logo.svg" /></div>
 
 # BCF 217 Bible Study Backend
 
