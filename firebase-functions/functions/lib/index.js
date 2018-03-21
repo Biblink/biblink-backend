@@ -3,11 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const gcs = require('@google-cloud/storage')({ keyFilename: 'admin_key.json' });
-const mkdirp = require("mkdirp-promise");
 const spawn = require('child-process-promise').spawn;
-const path = require("path");
-const os = require("os");
-const fs = require("fs");
 //admin account creation so the function can modify the database
 const adminAccount = require('../admin_key.json');
 admin.initializeApp({
@@ -60,82 +56,81 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
  * The code below was copied from : https://github.com/firebase/functions-samples/blob/master/generate-thumbnail/functions/index.js
  * And edited slightly to match our project
  */
-const THUMB_MAX_HEIGHT = 140;
-const THUMB_MAX_WIDTH = 140;
-const THUMB_PREFIX = 'thumb_';
-exports.generateThumbnail = functions.storage.object().onChange((event) => {
-    const filePath = event.data.name;
-    const contentType = event.data.contentType;
-    const fileDir = path.dirname(filePath);
-    const fileName = path.basename(filePath);
-    const info = fileName.split('-')[1].split('_');
-    const id = info[0];
-    const isGroup = info[1] === 'true';
-    const imageType = info[2];
-    const thumbFilePath = path.normalize(path.join(fileDir, `${THUMB_PREFIX}${fileName}`));
-    const tempLocalFile = path.join(os.tmpdir(), filePath);
-    const tempLocalDir = path.dirname(tempLocalFile);
-    const tempLocalThumbFile = path.join(os.tmpdir(), thumbFilePath);
-    if (isGroup && imageType === 'banner') {
-        return null;
-    }
-    if (!contentType.startsWith('image/')) {
-        console.log('This is not an image.');
-        return null;
-    }
-    if (fileName.startsWith(THUMB_PREFIX)) {
-        console.log('Already a Thumbnail.');
-        return null;
-    }
-    if (event.data.resourceState === 'not_exists') {
-        console.log('This is a deletion event.');
-        return null;
-    }
-    const bucket = gcs.bucket(event.data.bucket);
-    const file = bucket.file(filePath);
-    const thumbFile = bucket.file(thumbFilePath);
-    const metadata = { contentType: contentType };
-    return mkdirp(tempLocalDir).then(() => {
-        return file.download({ destination: tempLocalFile });
-    }).then(() => {
-        console.log('The file has been downloaded to', tempLocalFile);
-        return spawn('convert', [tempLocalFile, '-thumbnail', `${THUMB_MAX_WIDTH}x${THUMB_MAX_HEIGHT}>`, tempLocalThumbFile], { capture: ['stdout', 'stderr'] });
-    }).then(() => {
-        console.log('Thumbnail created at', tempLocalThumbFile);
-        return bucket.upload(tempLocalThumbFile, { destination: thumbFilePath, metadata: metadata });
-    }).then(() => {
-        console.log('Thumbnail uploaded to Storage at', thumbFilePath);
-        fs.unlinkSync(tempLocalFile);
-        fs.unlinkSync(tempLocalThumbFile);
-        const config = {
-            action: 'read',
-            expires: '03-01-2500',
-        };
-        return Promise.all([
-            thumbFile.getSignedUrl(config),
-            file.getSignedUrl(config),
-        ]);
-    }).then((results) => {
-        console.log('Got Signed URLs.');
-        const thumbResult = results[0];
-        const originalResult = results[1];
-        const thumbFileUrl = thumbResult[0];
-        const fileUrl = originalResult[0];
-        if (isGroup) {
-            return db.collection('studies').doc(id).get().then((res) => {
-                const data = res.data()['metadata'];
-                data['profileImage'] = thumbFileUrl;
-                return db.collection('studies').doc(id).update({ 'metadata': data });
-            });
-        }
-        else {
-            console.log(id);
-            return db.collection('users').doc(id).get().then(res => {
-                const data = res.data()['data'];
-                data['profileImage'] = thumbFileUrl;
-                return db.collection('users').doc(id).update({ 'data': data });
-            });
-        }
-    }).then(() => console.log('Thumbnail URLs saved to database.'));
-});
+// const THUMB_MAX_HEIGHT = 200;
+// const THUMB_MAX_WIDTH = 200;
+// const THUMB_PREFIX = 'thumb_';
+// exports.generateThumbnail = functions.storage.object().onChange((event) => {
+//     const filePath = event.data.name;
+//     const contentType = event.data.contentType;
+//     const fileDir = path.dirname(filePath);
+//     const fileName = path.basename(filePath);
+//     const info = fileName.split('-')[ 1 ].split('_');
+//     const id = info[ 0 ];
+//     const isGroup = info[ 1 ] === 'true';
+//     const imageType = info[ 2 ];
+//     const thumbFilePath = path.normalize(path.join(fileDir, `${ THUMB_PREFIX }${ fileName }`));
+//     const tempLocalFile = path.join(os.tmpdir(), filePath);
+//     const tempLocalDir = path.dirname(tempLocalFile);
+//     const tempLocalThumbFile = path.join(os.tmpdir(), thumbFilePath);
+//     if (isGroup && imageType === 'banner') {
+//         return null;
+//     }
+//     if (!contentType.startsWith('image/')) {
+//         console.log('This is not an image.');
+//         return null;
+//     }
+//     if (fileName.startsWith(THUMB_PREFIX)) {
+//         console.log('Already a Thumbnail.');
+//         return null;
+//     }
+//     if (event.data.resourceState === 'not_exists') {
+//         console.log('This is a deletion event.');
+//         return null;
+//     }
+//     const bucket = gcs.bucket(event.data.bucket);
+//     const file = bucket.file(filePath);
+//     const thumbFile = bucket.file(thumbFilePath);
+//     const metadata = { contentType: contentType };
+//     return mkdirp(tempLocalDir).then(() => {
+//         return file.download({ destination: tempLocalFile });
+//     }).then(() => {
+//         console.log('The file has been downloaded to', tempLocalFile);
+//         return spawn('convert', [ tempLocalFile, '-thumbnail', `${ THUMB_MAX_WIDTH }x${ THUMB_MAX_HEIGHT }>`, tempLocalThumbFile ], { capture: [ 'stdout', 'stderr' ] });
+//     }).then(() => {
+//         console.log('Thumbnail created at', tempLocalThumbFile);
+//         return bucket.upload(tempLocalThumbFile, { destination: thumbFilePath, metadata: metadata });
+//     }).then(() => {
+//         console.log('Thumbnail uploaded to Storage at', thumbFilePath);
+//         fs.unlinkSync(tempLocalFile);
+//         fs.unlinkSync(tempLocalThumbFile);
+//         const config = {
+//             action: 'read',
+//             expires: '03-01-2500',
+//         };
+//         return Promise.all([
+//             thumbFile.getSignedUrl(config),
+//             file.getSignedUrl(config),
+//         ]);
+//     }).then((results) => {
+//         console.log('Got Signed URLs.');
+//         const thumbResult = results[ 0 ];
+//         const originalResult = results[ 1 ];
+//         const thumbFileUrl = thumbResult[ 0 ];
+//         const fileUrl = originalResult[ 0 ];
+//         if (isGroup) {
+//             return db.collection('studies').doc(id).get().then((res) => {
+//                 const data = res.data()[ 'metadata' ]
+//                 data[ 'profileImage' ] = thumbFileUrl;
+//                 return db.collection('studies').doc(id).update({ 'metadata': data });
+//             });
+//         } else {
+//             console.log(id);
+//             return db.collection('users').doc(id).get().then(res => {
+//                 const data = res.data()[ 'data' ]
+//                 data[ 'profileImage' ] = thumbFileUrl;
+//                 return db.collection('users').doc(id).update({ 'data': data });
+//             });
+//         }
+//     }).then(() => console.log('Thumbnail URLs saved to database.'));
+// });
 //# sourceMappingURL=index.js.map
