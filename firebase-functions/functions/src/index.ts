@@ -32,7 +32,7 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
         .where('role', '==', 'leader')
         .get()
         .then(snapshot => {
-            let studyIds = [];
+            const studyIds = [];
             snapshot.forEach(doc => {
                 studyIds.push(doc.id)
             });
@@ -44,13 +44,13 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
         });
     //if the person is not a leader in any studies, it returns an informative message in the block below
     return userStudies.then(studyIds => {
-        if (studyIds == undefined)
+        if (studyIds === undefined)
             return 'person is not a leader in any studies';
         else {
             const studiesRef = db.collection('studies') //this block iterates through every study where the user is a leader, and changes the leader property to the new name
             studyIds.forEach(ID => {
                 const metadata = studiesRef.doc(ID).get().then(snapshot => {
-                    let studyMeta = snapshot.data()[ 'metadata' ]
+                    const studyMeta = snapshot.data()[ 'metadata' ]
                     studyMeta[ 'leader' ] = name;
                     const updataMetaData = studiesRef.doc(ID).update({ metadata: studyMeta })
                 })
@@ -167,62 +167,80 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
 // (www.|https:)?([\S]+)([.]{1})([\w]{1,4})
 // (Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)
 
-const anchorify = (match: string) => {
-	let httpRGX = /(https:|http:)+(\/\/)+/g
-	let httpTest = httpRGX.test(match)
-	if (httpTest == true) {
-		let anchor = match.anchor(match)
-		return anchor
-	}
-	else {
-		match = 'https://'.concat(match)
-		let anchor = match.anchor(match);
-		return anchor
-	}
+const httpRGX = /(https:|http:)+(\/\/)+/g;
+function anchorify(match: string) {
+    const httpTest = httpRGX.test(match)
+    if (httpTest === true) {
+        const anchor = `<a href="${ match }">${ match }</a>`;
+        return anchor
+    }
+    else {
+        const updateMatch = 'https://'.concat(match);
+        const anchor = `<a href="${ updateMatch }">${ match }</a>`;
+        return anchor;
+    }
 }
 
-const spanify = (match: string) => {
-    let bookList = ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings', 
-                    '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon',
-                    'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum',
-                    'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi',
-                    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians',
-                    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
-                    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude',' Revelation']
-    let fuzzySet = Fuzzy(bookList, true, 4, 4);
-    let fuzzyMatchs = fuzzySet.get(match, .30);
-    let topMatch = fuzzyMatchs[0]
-    let bookName = topMatch[1]
-    let span = `<span>(mouseenter)="getVerse(${bookName})">${bookName}</span>`
-    return span
+const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings',
+    '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon',
+    'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum',
+    'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi',
+    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians',
+    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
+    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
+
+function spanify(match: string) {
+    const fuzzySet = Fuzzy(bookList, true, 4, 4);
+    const fuzzyMatchs = fuzzySet.get(match, .30);
+    const topMatch = fuzzyMatchs[ 0 ];
+    const reference = match.split(' ')[ 1 ].trim();
+    const bookName = topMatch[ 1 ];
+    const span = `<span (mouseenter)="getVerse(${ bookName.trim() } ${ reference })">${ bookName.trim() } ${ reference }</span>`;
+    return span;
 }
 
-exports.postRegex = functions.firestore.document('studies/{studyId}/posts').onUpdate((event) => {
-	const postData = event.data.data();
- 	let postText = postData.text
-	postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    postData['text'] = postText;
-    const postId = event.params.id;
-    const updatePost = db.collection('studies').doc('{studyId}').collection('posts').doc(postId).update({text : postText});
+exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => {
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let postText: string = data[ 'text' ];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+        return null;
+    }
+    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    console.log(postText)
+    return event.data.ref.update({ text: postText, lastUpdated: now });
 })
 
-exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies').onUpdate((event) => {
-    const replyData = event.data.data();
- 	let replyText = replyData.text
-	replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    replyData['text'] = replyText;
-    const replyId = event.params.id;
-    const updateReply = db.collection('studies').doc('{studyId}').collection('posts').doc(replyId).update({text : replyText});
+exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let replyText: string = data[ 'text' ];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+        return
+    }
+    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    return event.data.ref.update({ text: replyText, lastUpdated: now });
 })
 
-exports.subreplyRegex = functions.firestore.document('studiest/{studyId}/posts/{postId}/replies/{replyId}/subreplies').onUpdate((event) => {
-    const subreplyData = event.data.data();
- 	let subreplyText = subreplyData.text
-	subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    subreplyData['text'] = subreplyText;
-    const subreplyId = event.params.id;
-    const updateSubreply = db.collection('studies').doc('{studyId}').collection('posts').doc(subreplyId).update({text : subreplyText});
+exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => {
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let subreplyText: string = data[ 'text' ];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+        return
+    }
+    subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    return event.data.ref.update({ text: subreplyText, lastUpdated: now });
 })

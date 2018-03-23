@@ -4,6 +4,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const gcs = require('@google-cloud/storage')({ keyFilename: 'admin_key.json' });
 const spawn = require('child-process-promise').spawn;
+const Fuzzy = require("fuzzyset.js");
 //admin account creation so the function can modify the database
 const adminAccount = require('../admin_key.json');
 admin.initializeApp({
@@ -25,7 +26,7 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
         .where('role', '==', 'leader')
         .get()
         .then(snapshot => {
-        let studyIds = [];
+        const studyIds = [];
         snapshot.forEach(doc => {
             studyIds.push(doc.id);
         });
@@ -37,13 +38,13 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
     });
     //if the person is not a leader in any studies, it returns an informative message in the block below
     return userStudies.then(studyIds => {
-        if (studyIds == undefined)
+        if (studyIds === undefined)
             return 'person is not a leader in any studies';
         else {
             const studiesRef = db.collection('studies'); //this block iterates through every study where the user is a leader, and changes the leader property to the new name
             studyIds.forEach(ID => {
                 const metadata = studiesRef.doc(ID).get().then(snapshot => {
-                    let studyMeta = snapshot.data()['metadata'];
+                    const studyMeta = snapshot.data()['metadata'];
                     studyMeta['leader'] = name;
                     const updataMetaData = studiesRef.doc(ID).update({ metadata: studyMeta });
                 });
@@ -133,4 +134,78 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
 //         }
 //     }).then(() => console.log('Thumbnail URLs saved to database.'));
 // });
+// (www.|https:)?([\S]+)([.]{1})([\w]{1,4})
+// (Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)
+const httpRGX = /(https:|http:)+(\/\/)+/g;
+function anchorify(match) {
+    const httpTest = httpRGX.test(match);
+    if (httpTest === true) {
+        const anchor = `<a href="${match}">${match}</a>`;
+        return anchor;
+    }
+    else {
+        const updateMatch = 'https://'.concat(match);
+        const anchor = `<a href="${updateMatch}">${match}</a>`;
+        return anchor;
+    }
+}
+const bookList = ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings',
+    '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon',
+    'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum',
+    'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi',
+    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians',
+    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
+    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation'];
+function spanify(match) {
+    const fuzzySet = Fuzzy(bookList, true, 4, 4);
+    const fuzzyMatchs = fuzzySet.get(match, .30);
+    const topMatch = fuzzyMatchs[0];
+    const reference = match.split(' ')[1].trim();
+    const bookName = topMatch[1];
+    const span = `<span (mouseenter)="getVerse(${bookName.trim()} ${reference})">${bookName.trim()} ${reference}</span>`;
+    return span;
+}
+exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => {
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let postText = data['text'];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+        return null;
+    }
+    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
+    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
+    console.log(postText);
+    return event.data.ref.update({ text: postText, lastUpdated: now });
+});
+exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let replyText = data['text'];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+        return;
+    }
+    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
+    replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
+    return event.data.ref.update({ text: replyText, lastUpdated: now });
+});
+exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => {
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let subreplyText = data['text'];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+        return;
+    }
+    subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
+    subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
+    return event.data.ref.update({ text: subreplyText, lastUpdated: now });
+});
 //# sourceMappingURL=index.js.map
