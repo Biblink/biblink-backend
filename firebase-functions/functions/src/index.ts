@@ -206,7 +206,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     const data = event.data.data();
     let postText: string = data[ 'text' ];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
     postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
@@ -222,7 +222,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     const data = event.data.data();
     let replyText: string = data[ 'text' ];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
@@ -237,7 +237,7 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     const data = event.data.data();
     let subreplyText: string = data[ 'text' ];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
