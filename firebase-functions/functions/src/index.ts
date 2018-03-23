@@ -193,7 +193,7 @@ const spanify = (match: string) => {
     let fuzzyMatchs = fuzzySet.get(match, .30);
     let topMatch = fuzzyMatchs[0]
     let bookName = topMatch[1]
-    let span = `<span>(mouseenter)="getVerse(${bookName})">&{bookName}</span>`
+    let span = `<span>(mouseenter)="getVerse(${bookName})">${bookName}</span>`
     return span
 }
 
