@@ -204,6 +204,25 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts').onUp
     postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     postData['text'] = postText;
     const postId = event.params.id;
-    const updatePost = db.collection('studies/{studyId}/posts/').doc(postId).update({text: postText})
+    const updatePost = db.collection('studies').doc('{studyId}').collection('posts').doc(postId).update({text : postText});
 })
 
+exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies').onUpdate((event) => {
+    const replyData = event.data.data();
+ 	let replyText = replyData.text
+	replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    replyData['text'] = replyText;
+    const replyId = event.params.id;
+    const updateReply = db.collection('studies').doc('{studyId}').collection('posts').doc(replyId).update({text : replyText});
+})
+
+exports.subreplyRegex = functions.firestore.document('studiest/{studyId}/posts/{postId}/replies/{replyId}/subreplies').onUpdate((event) => {
+    const subreplyData = event.data.data();
+ 	let subreplyText = subreplyData.text
+	subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    subreplyData['text'] = subreplyText;
+    const subreplyId = event.params.id;
+    const updateSubreply = db.collection('studies').doc('{studyId}').collection('posts').doc(subreplyId).update({text : subreplyText});
+})
