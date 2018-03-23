@@ -7,6 +7,7 @@ const spawn = require('child-process-promise').spawn;
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
+import * as Fuzzy from 'fuzzyset.js';
 
 
 //admin account creation so the function can modify the database
@@ -162,3 +163,47 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
 //         }
 //     }).then(() => console.log('Thumbnail URLs saved to database.'));
 // });
+
+// (www.|https:)?([\S]+)([.]{1})([\w]{1,4})
+// (Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)
+
+const anchorify = (match: string) => {
+	let httpRGX = /(https:|http:)+(\/\/)+/g
+	let httpTest = httpRGX.test(match)
+	if (httpTest == true) {
+		let anchor = match.anchor(match)
+		return anchor
+	}
+	else {
+		match = 'https://'.concat(match)
+		let anchor = match.anchor(match);
+		return anchor
+	}
+}
+
+const spanify = (match: string) => {
+    let bookList = ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings', 
+                    '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon',
+                    'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum',
+                    'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi',
+                    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians',
+                    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
+                    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude',' Revelation']
+    let fuzzySet = Fuzzy(bookList, true, 4, 4);
+    let fuzzyMatchs = fuzzySet.get(match, .30);
+    let topMatch = fuzzyMatchs[0]
+    let bookName = topMatch[1]
+    let span = `<span>(mouseenter)="getVerse(${bookName})">&{bookName}</span>`
+    return span
+}
+
+exports.postRegex = functions.firestore.document('studies/{studyId}/posts').onUpdate((event) => {
+	const postData = event.data.data();
+ 	let postText = postData.text
+	postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    postData['text'] = postText;
+    const postId = event.params.id;
+    const updatePost = db.collection('studies/{studyId}/posts/').doc(postId).update({text: postText})
+})
+
