@@ -198,7 +198,7 @@ function spanify(match: string) {
     const topMatch = fuzzyMatchs[ 0 ];
     const reference = match.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[ 1 ];
-    const span = `<span (mouseenter)="getVerse(${ bookName.trim() } ${ reference })">${ bookName.trim() } ${ reference }</span>`;
+    const span = ` <span (mouseenter)="getVerse(${ bookName.trim() } ${ reference })">${ bookName.trim() } ${ reference }</span>`;
     return span;
 }
 
