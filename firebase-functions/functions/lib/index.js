@@ -139,13 +139,16 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
 const httpRGX = /(https:|http:)+(\/\/)+/g;
 function anchorify(match) {
     const httpTest = httpRGX.test(match);
+    if (match.indexOf('</a>') !== -1) {
+        return match;
+    }
     if (httpTest === true) {
-        const anchor = `<a href="${match}">${match}</a>`;
+        const anchor = `<a class="more-link" href="${match}">${match}</a>`;
         return anchor;
     }
     else {
         const updateMatch = 'https://'.concat(match);
-        const anchor = `<a href="${updateMatch}">${match}</a>`;
+        const anchor = `<a class="more-link" target="_blank" href="${updateMatch}">${match}</a>`;
         return anchor;
     }
 }
@@ -160,7 +163,8 @@ function spanify(match) {
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
     const fuzzyMatchs = fuzzySet.get(match, .30);
     const topMatch = fuzzyMatchs[0];
-    const reference = match.split(' ')[1].trim();
+    const reference = match.trim().split(' ')[1].trim();
+    console.log(reference);
     const bookName = topMatch[1];
     const span = `<span (mouseenter)="getVerse(${bookName.trim()} ${reference})">${bookName.trim()} ${reference}</span>`;
     return span;
@@ -172,13 +176,12 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     const data = event.data.data();
     let postText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
     postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
     postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
-    console.log(postText);
-    return event.data.ref.update({ text: postText, lastUpdated: now });
+    return event.data.ref.update({ htmlText: postText, lastUpdated: now });
 });
 exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
     if (!event.data.exists) {
@@ -187,12 +190,12 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     const data = event.data.data();
     let replyText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return;
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
     replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
-    return event.data.ref.update({ text: replyText, lastUpdated: now });
+    return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => {
     if (!event.data.exists) {
@@ -201,11 +204,11 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     const data = event.data.data();
     let subreplyText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (500)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return;
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
-    return event.data.ref.update({ text: subreplyText, lastUpdated: now });
+    return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
 //# sourceMappingURL=index.js.map
