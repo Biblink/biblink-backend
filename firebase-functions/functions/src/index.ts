@@ -174,7 +174,7 @@ function anchorify(match: string) {
         return match;
     }
     if (httpTest === true) {
-        const anchor = `<a class="more-link" href="${ match }">${ match }</a>`;
+        const anchor = `<a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
         return anchor;
     }
     else {
@@ -198,7 +198,7 @@ function spanify(match: string) {
     const topMatch = fuzzyMatchs[ 0 ];
     const reference = match.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[ 1 ];
-    const span = ` <span (mouseenter)="getVerse(${ bookName.trim() } ${ reference })">${ bookName.trim() } ${ reference }</span>`;
+    const span = ` <span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`;
     return span;
 }
 
@@ -225,7 +225,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     let replyText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
-        return
+        return null;
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
@@ -240,7 +240,7 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     let subreplyText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
-        return
+        return null;
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)

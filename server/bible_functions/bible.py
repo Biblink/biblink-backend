@@ -194,7 +194,7 @@ class Bible(object):
         text = ''
         for verse_data in verses_data:
             # use <n> tags as html for frontend
-            value = '<n>{0}</n>{1}'.format(
+            value = '<n>{0}</n> {1}'.format(
                 verse_data['verse_number'], verse_data['text'])
             text += value
         response['combined_text'] = text
