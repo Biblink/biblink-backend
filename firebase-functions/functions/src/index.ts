@@ -53,16 +53,12 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
                     const studyMeta = snapshot.data()[ 'metadata' ]
                     studyMeta[ 'leader' ] = name;
                     const updataMetaData = studiesRef.doc(ID).update({ metadata: studyMeta })
-                })
-            })
+                });
+            });
             return `updated studies with leader: ${ name }`;
         }
-
-
-    })
-
-
-})
+    });
+});
 
 /**
  * The code below was copied from : https://github.com/firebase/functions-samples/blob/master/generate-thumbnail/functions/index.js
@@ -214,10 +210,10 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     }
     postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    let foundLinks = postText.match(/(<a href=)+(.)*(<\/a>)/g)
-    let foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g)
+    const foundLinks = postText.match(/(<a href=)+(.)*(<\/a>)/g)
+    const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g)
     return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
-})
+});
 
 exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
     if (!event.data.exists) {
@@ -232,7 +228,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
-})
+});
 
 exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => {
     if (!event.data.exists) {
@@ -247,4 +243,4 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
-})
+});
