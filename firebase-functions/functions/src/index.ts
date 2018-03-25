@@ -167,13 +167,13 @@ function anchorify(match: string) {
     if (match.indexOf('</a>') !== -1) { //If the link is already in an anchor, return it as is
         return match;
     }
-    if (httpTest === true) { //If the link already has http, make an anchor with it as is
-        const anchor = `<a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
+    if (httpTest === true) { //if the link has http on it already, make the anchor
+        const anchor = ` <a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
         return anchor;
     }
-    else {
-        const updateMatch = 'https://'.concat(match); //If the link has no https, add it, then make the anchor
-        const anchor = `<a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
+    else { //if not, add the https:// and then make an anchor
+        const updateMatch = 'https://'.concat(match);
+        const anchor = ` <a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
         return anchor;
     }
 }
@@ -206,9 +206,9 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
         return null;
     }
-    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //creates anchors
-    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //creates spans
-    const foundLinks = postText.match(/(<a href=)+(.)*(<\/a>)/g)
+    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
+    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
+    const foundLinks = postText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g)
     return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
