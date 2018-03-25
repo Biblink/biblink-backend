@@ -170,12 +170,12 @@ function anchorify(match: string) {
         return match;
     }
     if (httpTest === true) {
-        const anchor = `<a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
+        const anchor = ` <a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
         return anchor;
     }
     else {
         const updateMatch = 'https://'.concat(match);
-        const anchor = `<a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
+        const anchor = ` <a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
         return anchor;
     }
 }
@@ -210,7 +210,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     }
     postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    const foundLinks = postText.match(/(<a href=)+(.)*(<\/a>)/g)
+    const foundLinks = postText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g)
     return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
