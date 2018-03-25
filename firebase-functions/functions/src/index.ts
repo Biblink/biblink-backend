@@ -214,7 +214,9 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     }
     postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    return event.data.ref.update({ htmlText: postText, lastUpdated: now });
+    let foundLinks = postText.match(/(<a href=)+(.)*(<\/a>)/g)
+    let foundVerses = postText.match(/(<span \(mouseenter\)=)+(.)*(<\/span>)/g)
+    return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 })
 
 exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
