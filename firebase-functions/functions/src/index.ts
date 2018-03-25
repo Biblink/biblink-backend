@@ -160,21 +160,19 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
 //     }).then(() => console.log('Thumbnail URLs saved to database.'));
 // });
 
-// (www.|https:)?([\S]+)([.]{1})([\w]{1,4})
-// (Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)
 
-const httpRGX = /(https:|http:)+(\/\/)+/g;
+const httpRGX = /(https:|http:)+(\/\/)+/g; //defines regular expression for finding links that already have http protocol on them
 function anchorify(match: string) {
     const httpTest = httpRGX.test(match)
-    if (match.indexOf('</a>') !== -1) {
+    if (match.indexOf('</a>') !== -1) { //If the link is already in an anchor, return it as is
         return match;
     }
-    if (httpTest === true) {
+    if (httpTest === true) { //If the link already has http, make an anchor with it as is
         const anchor = `<a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
         return anchor;
     }
     else {
-        const updateMatch = 'https://'.concat(match);
+        const updateMatch = 'https://'.concat(match); //If the link has no https, add it, then make the anchor
         const anchor = `<a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
         return anchor;
     }
@@ -188,7 +186,7 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
     '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
     '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
 
-function spanify(match: string) {
+function spanify(match: string) { //This function creates a span that encapsulates and verse references
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
     const fuzzyMatchs = fuzzySet.get(match, .30);
     const topMatch = fuzzyMatchs[ 0 ];
@@ -198,24 +196,24 @@ function spanify(match: string) {
     return span;
 }
 
-exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => {
+exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => { //this firebase function formats posts with the above functions
     if (!event.data.exists) {
         return null;
     }
     const data = event.data.data();
     let postText: string = data[ 'text' ];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
         return null;
     }
-    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //creates anchors
+    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //creates spans
     const foundLinks = postText.match(/(<a href=)+(.)*(<\/a>)/g)
     const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g)
     return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
 
-exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
+exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => { //this function does the exact same thing but with replies
     if (!event.data.exists) {
         return null;
     }
@@ -230,7 +228,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 
-exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => {
+exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => { //same function but for subreplies
     if (!event.data.exists) {
         return null;
     }
