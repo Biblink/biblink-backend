@@ -168,12 +168,12 @@ function anchorify(match: string) {
         return match;
     }
     if (httpTest === true) { //if the link has http on it already, make the anchor
-        const anchor = ` <a class="more-link" target="_blank" href="${ match }">${ match }</a>`;
+        const anchor = ` <a class="more-link" target="_blank" href="${ match }">${ match }</a> `;
         return anchor;
     }
     else { //if not, add the https:// and then make an anchor
         const updateMatch = 'https://'.concat(match);
-        const anchor = ` <a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
+        const anchor = ` <a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a> `;
         return anchor;
     }
 }
@@ -192,7 +192,7 @@ function spanify(match: string) { //This function creates a span that encapsulat
     const topMatch = fuzzyMatchs[ 0 ];
     const reference = match.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[ 1 ];
-    const span = ` <span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`;
+    const span = ` <span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span> `;
     return span;
 }
 
