@@ -187,22 +187,22 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
     '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
 
 function spanify(match: string) { //This function creates a span that encapsulates and verse references
-    let rawRef = match.match(/(\d+:+.*)/g);
-    let stringRef = rawRef.join("").trim()
-    let matchCont = "" //variable to get the newMatch outside of the if statement
+    const rawRef = match.match(/(\d+:+.*)/g);
+    const stringRef = rawRef.join("").trim()
+    const matchCont = "" //variable to get the newMatch outside of the if statement
     if (stringRef.endsWith(",")) {
-        let slicedRef = stringRef.slice(0, -1);
-        let squishedRef = slicedRef.replace(/ /g,'')
-    		let rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
-    		let stringBook = rawBook.join("").trim()
-            let newMatch = stringBook.concat(" " + squishedRef)
-            let matchCont = newMatch
+        const slicedRef = stringRef.slice(0, -1);
+        const squishedRef = slicedRef.replace(/ /g,'')
+    	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
+    	const stringBook = rawBook.join("").trim()
+        const newMatch = stringBook.concat(" " + squishedRef)
+        const matchCont = newMatch
     }
     else {
-        let squishedRef = stringRef.replace(' ','')
-    		let rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
-    		let stringBook = rawBook.join("").trim()
-            let newMatch = stringBook.concat(" " + squishedRef)
+        const squishedRef = stringRef.replace(' ','')
+    	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
+    	const stringBook = rawBook.join("").trim()
+        const newMatch = stringBook.concat(" " + squishedRef)
     }
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
     const fuzzyMatchs = fuzzySet.get(matchCont, .30);
