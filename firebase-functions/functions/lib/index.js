@@ -134,21 +134,19 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
 //         }
 //     }).then(() => console.log('Thumbnail URLs saved to database.'));
 // });
-// (www.|https:)?([\S]+)([.]{1})([\w]{1,4})
-// (Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)
-const httpRGX = /(https:|http:)+(\/\/)+/g;
+const httpRGX = /(https:|http:)+(\/\/)+/g; //defines regular expression for finding links that already have http protocol on them
 function anchorify(match) {
     const httpTest = httpRGX.test(match);
     if (match.indexOf('</a>') !== -1) {
         return match;
     }
     if (httpTest === true) {
-        const anchor = `<a class="more-link" target="_blank" href="${match}">${match}</a>`;
+        const anchor = ` <a class="more-link" target="_blank" href="${match}">${match}</a> `;
         return anchor;
     }
     else {
         const updateMatch = 'https://'.concat(match);
-        const anchor = `<a class="more-link" target="_blank" href="${updateMatch}">${match}</a>`;
+        const anchor = ` <a class="more-link" target="_blank" href="${updateMatch}">${match}</a> `;
         return anchor;
     }
 }
@@ -165,7 +163,7 @@ function spanify(match) {
     const topMatch = fuzzyMatchs[0];
     const reference = match.trim().split(' ')[1].trim();
     const bookName = topMatch[1];
-    const span = ` <span class="verse-link" data-verse="${bookName.trim()} ${reference}">${bookName.trim()} ${reference}</span>`;
+    const span = ` <span class="verse-link" data-verse="${bookName.trim()} ${reference}">${bookName.trim()} ${reference}</span> `;
     return span;
 }
 exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => {
@@ -178,9 +176,11 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
-    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
-    return event.data.ref.update({ htmlText: postText, lastUpdated: now });
+    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify); //adds anchors
+    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify); //adds spans
+    const foundLinks = postText.match(/<a[^>]*>([^<]+)<\/a>/g);
+    const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g);
+    return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
 exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => {
     if (!event.data.exists) {
