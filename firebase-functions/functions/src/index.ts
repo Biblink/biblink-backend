@@ -187,29 +187,29 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
     '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
 
 function spanify(match: string) { //This function creates a span that encapsulates and verse references
-    const rawRef = match.match(/(\d+:+.*)/g);
-    const stringRef = rawRef.join("").trim()
-    const matchCont = "" //variable to get the newMatch outside of the if statement
+    const rawRef = match.match(/(\d+:+.*)/g); //finds reference from the match (the numbers bit)
+    const stringRef = rawRef.join("").trim() //changes regex array to a string
+    let matchCont = "" //variable to get the newMatch outside of the if statement
     if (stringRef.endsWith(",")) {
-        const slicedRef = stringRef.slice(0, -1);
-        const squishedRef = slicedRef.replace(/ /g,'')
-    	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
-    	const stringBook = rawBook.join("").trim()
-        const newMatch = stringBook.concat(" " + squishedRef)
-        const matchCont = newMatch
+        const slicedRef = stringRef.slice(0, -1); //removes commas at the end of the reference, if they exist
+        const squishedRef = slicedRef.replace(/ /g,'') //removes all spaces from the reference
+    	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g) //finds the book part of the match
+    	const stringBook = rawBook.join("").trim() //changes regex array into a string
+        const newMatch = stringBook.concat(" " + squishedRef) //put the two parts together
+        matchCont = newMatch //gets this fancy newMatch out of the if statement
     }
-    else {
+    else { //this half of the code does the same thing, minus removing the comma at the end
         const squishedRef = stringRef.replace(' ','')
     	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
     	const stringBook = rawBook.join("").trim()
         const newMatch = stringBook.concat(" " + squishedRef)
     }
-    const fuzzySet = Fuzzy(bookList, true, 4, 4);
-    const fuzzyMatchs = fuzzySet.get(matchCont, .30);
-    const topMatch = fuzzyMatchs[ 0 ];
-    const reference = matchCont.trim().split(' ')[ 1 ].trim();
-    const bookName = topMatch[ 1 ];
-    const span = `<span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`;
+    const fuzzySet = Fuzzy(bookList, true, 4, 4);  //creates fuzzy set out of the books of the Bible
+    const fuzzyMatchs = fuzzySet.get(matchCont, .30); //finds the closest book(s) to the thing the user put in
+    const topMatch = fuzzyMatchs[ 0 ]; //gets the best match out of those book(s)
+    const reference = matchCont.trim().split(' ')[ 1 ].trim(); //gets the number bit
+    const bookName = topMatch[ 1 ]; //gets the book bit
+    const span = `<span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`; //uses the number bit and the book bit to make an html element
     return span;
 }   
 
