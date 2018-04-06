@@ -187,14 +187,31 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
     '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
 
 function spanify(match: string) { //This function creates a span that encapsulates and verse references
+    let rawRef = match.match(/(\d+:+.*)/g);
+    let stringRef = rawRef.join("").trim()
+    let matchCont = "" //variable to get the newMatch outside of the if statement
+    if (stringRef.endsWith(",")) {
+        let slicedRef = stringRef.slice(0, -1);
+        let squishedRef = slicedRef.replace(/ /g,'')
+    		let rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
+    		let stringBook = rawBook.join("").trim()
+            let newMatch = stringBook.concat(" " + squishedRef)
+            let matchCont = newMatch
+    }
+    else {
+        let squishedRef = stringRef.replace(' ','')
+    		let rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
+    		let stringBook = rawBook.join("").trim()
+            let newMatch = stringBook.concat(" " + squishedRef)
+    }
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
-    const fuzzyMatchs = fuzzySet.get(match, .30);
+    const fuzzyMatchs = fuzzySet.get(matchCont, .30);
     const topMatch = fuzzyMatchs[ 0 ];
-    const reference = match.trim().split(' ')[ 1 ].trim();
+    const reference = matchCont.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[ 1 ];
     const span = ` <span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`;
     return span;
-}
+}   
 
 exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => { //this firebase function formats posts with the above functions
     if (!event.data.exists) {
@@ -209,7 +226,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
     postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
     const foundLinks = postText.match(/<a[^>]*>([^<]+)<\/a>/g);
-    const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g)
+    const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g);
     return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
 
