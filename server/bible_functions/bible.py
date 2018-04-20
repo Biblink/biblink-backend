@@ -191,6 +191,8 @@ class Bible(object):
             for verse in verses:
                 verses_data.append(self.get_verse(chapter_data, verse))
         response['verse_data'] = verses_data
+        response['chapters'] = list(range(1, len(book_data['data']) + 1))
+        response['book_name'] = book_data['name']
         text = ''
         for verse_data in verses_data:
             # use <n> tags as html for frontend
@@ -199,6 +201,16 @@ class Bible(object):
             text += value
         response['combined_text'] = text
         return response
+
+    def get_all_books(self):
+        """Function to return list of all books
+
+        Returns all books of the bible
+
+        Returns:
+            (list): list of all books  
+        """
+        return self.books
 
     def get_book(self, book):
         """Function to get book data from self.bible
