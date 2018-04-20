@@ -21,7 +21,7 @@ def test_books():
 
 
 def test_parse_query():
-    """Tests pares query algorithm"""
+    """Tests parse query algorithm"""
 
     # test regular
     results = BIBLE.parse_query('Genesis 1:1')
@@ -109,8 +109,8 @@ def test_verse_data():
 def test_bible_data():
     """Tests get_data function"""
     data = BIBLE.get_data('Genesis', '2', [2, 4])
-    assert len(data.keys()) == 3
-    assert list(data.keys()) == ['id', 'verse_data', 'combined_text']
+    assert len(data.keys()) == 5
+    assert list(data.keys()) == ['id', 'verse_data', 'chapters', 'book_name', 'combined_text']
     assert isinstance(data['combined_text'], str)
     assert isinstance(data['id'], int)
     assert len(data['verse_data']) == 2
