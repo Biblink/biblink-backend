@@ -114,6 +114,16 @@ def compute_similarity():
     return resp
 
 
+@APP.route('/all')
+def get_all_books():
+    """Route to get all books of the bible"""
+    all_id = str(uuid.uuid4())
+    response = {'all_id': all_id, 'url': request.url}
+    response['data'] = BIBLE.get_all_books()
+    resp = Response(json.dumps(response), status=200, mimetype='application/json')
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
 @APP.route('/metadata')
 def compute_metadata():
     """Route to process verse similarities from /metadata route

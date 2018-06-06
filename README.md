@@ -51,8 +51,26 @@
 1. `cd server`
 2. Run `gunicorn server:APP --preload -t 300 --log-file=- --workers=2` in terminal
 
+
+## Firebase Functions Setup
+
+### Setting Up Environment
+
+1. `cd firebase-functions/functions`
+2. `npm install`
+
+### Deploying Functions
+
+1. `cd firebase-functions/functions`
+2. `firebase deploy --only functions` (To Deploy All Functions)
+3. `firebase deploy --only functions:<function-name>` (To Deploy Certain Function)
+
 ## Resources
 
 [Server Hosting](https://www.vultr.com/)
 
 [Server Deployment](https://github.com/githubsaturn/captainduckduck)
+
+[Firebase Functions](https://firebase.google.com/docs/functions/)
+
+[Cloud Firestore Functions](https://firebase.google.com/docs/functions/firestore-events)
