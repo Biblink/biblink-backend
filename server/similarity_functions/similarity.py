@@ -58,28 +58,29 @@ class Similarity(object):
             self.initialize(matrix_path=matrix_path)
 
     def initialize(self, load_matrix=True, matrix_path=None, create_matrix=False):
-        print(' - Loading GloVe File...')
-        if self._check_file(self.glove_file, '.txt'):
-            with open(self.glove_file, encoding='utf-8-sig') as f:
-                for line in list(f.readlines()):
-                    split = line.split()
-                    word = split[0]
-                    data = np.array([float(i) for i in split[1:]])
-                    self.glove_words[word] = data
-        else:
-            self._throw_value_error(
-                'Please enter a proper glove .txt file')
-
+        if create_matrix:
+            print(' - Loading GloVe File...')
+            if self._check_file(self.glove_file, '.txt'):
+                with open(self.glove_file, encoding='utf-8-sig') as f:
+                    for line in list(f.readlines()):
+                        split = line.split()
+                        word = split[0]
+                        data = np.array([float(i) for i in split[1:]])
+                        self.glove_words[word] = data
+            else:
+                self._throw_value_error(
+                    'Please enter a proper glove .txt file')
         # preprocess text corpus
         self.bible_verses = copy.deepcopy(self.verse_data)
         self.stopwords_list = set(stopwords.words('english'))
         self.exclude = set(string.punctuation)
-        print(' - Tokenizing Data...')
-        self.verse_data = self.tokenize_data(self.verse_data)
-        assert self.verse_data[0].keys() != self.bible_verses[0].keys()
-        print(' - Converting GloVe Vectors...')
-        self.verse_data = self.convert_to_glove_vectors(self.verse_data)
-        assert self.verse_data[0].keys() != self.bible_verses[0].keys()
+        if create_matrix:
+            print(' - Tokenizing Data...')
+            self.verse_data = self.tokenize_data(self.verse_data)
+            assert self.verse_data[0].keys() != self.bible_verses[0].keys()
+            print(' - Converting GloVe Vectors...')
+            self.verse_data = self.convert_to_glove_vectors(self.verse_data)
+            assert self.verse_data[0].keys() != self.bible_verses[0].keys()
         if load_matrix:
             print(' - Loading Cosine Similarity Matrix...')
             self.sim_matrix = joblib.load(matrix_path)
