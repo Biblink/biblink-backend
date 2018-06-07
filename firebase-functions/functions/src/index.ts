@@ -192,16 +192,16 @@ function spanify(match: string) { //This function creates a span that encapsulat
     let matchCont = "" //variable to get the newMatch outside of the if statement
     if (stringRef.endsWith(",")) {
         const slicedRef = stringRef.slice(0, -1); //removes commas at the end of the reference, if they exist
-        const squishedRef = slicedRef.replace(/ /g,'') //removes all spaces from the reference
-    	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g) //finds the book part of the match
-    	const stringBook = rawBook.join("").trim() //changes regex array into a string
+        const squishedRef = slicedRef.replace(/ /g, '') //removes all spaces from the reference
+        const rawBook = match.match(/((\w)*[^:,;.'"\d])/g) //finds the book part of the match
+        const stringBook = rawBook.join("").trim() //changes regex array into a string
         const newMatch = stringBook.concat(" " + squishedRef) //put the two parts together
         matchCont = newMatch //gets this fancy newMatch out of the if statement
     }
     else { //this half of the code does the same thing, minus removing the comma at the end
-        const squishedRef = stringRef.replace(' ','')
-    	const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
-    	const stringBook = rawBook.join("").trim()
+        const squishedRef = stringRef.replace(' ', '')
+        const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
+        const stringBook = rawBook.join("").trim()
         const newMatch = stringBook.concat(" " + squishedRef)
     }
     const fuzzySet = Fuzzy(bookList, true, 4, 4);  //creates fuzzy set out of the books of the Bible
@@ -211,9 +211,9 @@ function spanify(match: string) { //This function creates a span that encapsulat
     const bookName = topMatch[ 1 ]; //gets the book bit
     const span = `<span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`; //uses the number bit and the book bit to make an html element
     return span;
-}   
+}
 
-exports.annotationRegex = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}').onWrite((event) => { 
+exports.annotationRegex = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}').onWrite((event) => {
     if (!event.data.exists) {
         return null;
     }
@@ -230,7 +230,7 @@ exports.annotationRegex = functions.firestore.document('studies/{studyId}/annota
     return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
 
-exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((event) => { 
+exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((event) => {
     if (!event.data.exists) {
         return null;
     }
@@ -243,6 +243,21 @@ exports.annotationReply = functions.firestore.document('studies/{studyId}/annota
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
+});
+
+exports.annotationSubreply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => { //same function but for subreplies
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let subreplyText: string = data[ 'text' ];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+        return null;
+    }
+    subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
 
 exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => { //this firebase function formats posts with spanify and httpRGX
