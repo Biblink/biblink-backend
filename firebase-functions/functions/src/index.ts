@@ -187,29 +187,34 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
     '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
 
 function spanify(match: string) { //This function creates a span that encapsulates the verse references
-    const rawRef = match.match(/(\d+:+.*)/g);
+    const rawRef = match.match(/(\d+:+.*)(\d){1}/g);
+    console.log(rawRef)
     const stringRef = rawRef.join("").trim()
-    let matchCont = ""
+    console.log(stringRef)
+    let bookCont = ""
+    let refCont = ""
     if (stringRef.endsWith(",")) {
         const slicedRef = stringRef.slice(0, -1);
-        const squishedRef = slicedRef.replace(/ /g, '')
+        const squishedRef = slicedRef.replace(' ', '')
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
         const stringBook = rawBook.join("").trim()
-        const newMatch = stringBook.concat(" " + squishedRef)
-        matchCont = newMatch
+        //const newMatch = stringBook.concat(" " + squishedRef)
+        bookCont = stringBook
+        refCont = squishedRef
     }
     else {
         const squishedRef = stringRef.replace(' ', '')
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
         const stringBook = rawBook.join("").trim()
-        const newMatch = stringBook.concat(" " + squishedRef)
-        matchCont = newMatch
+        //const newMatch = stringBook.concat(" " + squishedRef)
+        bookCont = stringBook
+        refCont = squishedRef
     }
 
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
-    const fuzzyMatchs = fuzzySet.get(matchCont, .30);
+    const fuzzyMatchs = fuzzySet.get(bookCont, .30);
     const topMatch = fuzzyMatchs[ 0 ];
-    const reference = matchCont.trim().split(' ')[ 1 ].trim();
+    const reference = refCont//matchCont.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[ 1 ];
     const span = `<span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`; //uses the number bit and the book bit to make an html element
     return span;
@@ -270,7 +275,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
         return null;
     }
     annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
-    annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
+    annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+(\d)+(:)+([\d,-\s;]*?)(\d){1}/g, spanify) //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
     return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
