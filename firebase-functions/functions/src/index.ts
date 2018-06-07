@@ -187,14 +187,10 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
     '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation' ];
 
 function spanify(match: string) { //This function creates a span that encapsulates the verse references
-    console.log(match)
     const rawRef = match.match(/(\d+:+.*)/g);
-    console.log(rawRef)
     const stringRef = rawRef.join("").trim()
-    console.log(stringRef)
     let matchCont = ""
     if (stringRef.endsWith(",")) {
-        console.log("if pass")
         const slicedRef = stringRef.slice(0, -1);
         const squishedRef = slicedRef.replace(/ /g, '')
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
@@ -203,13 +199,13 @@ function spanify(match: string) { //This function creates a span that encapsulat
         matchCont = newMatch
     }
     else {
-        console.log("else pass")
         const squishedRef = stringRef.replace(' ', '')
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
         const stringBook = rawBook.join("").trim()
         const newMatch = stringBook.concat(" " + squishedRef)
+        matchCont = newMatch
     }
-    console.log("block pass")
+
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
     const fuzzyMatchs = fuzzySet.get(matchCont, .30);
     const topMatch = fuzzyMatchs[ 0 ];
