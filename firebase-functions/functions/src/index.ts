@@ -230,10 +230,9 @@ exports.annotationRegex = functions.firestore.document('studies/{studyId}/annota
         return null;
     }
     annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
-    annotationText = annotationText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
-    return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
+    return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks });
 });
 
 exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((event) => {
@@ -247,7 +246,6 @@ exports.annotationReply = functions.firestore.document('studies/{studyId}/annota
         return null;
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 
@@ -262,7 +260,6 @@ exports.annotationSubreply = functions.firestore.document('studies/{studyId}/ann
         return null;
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
 
@@ -277,7 +274,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
         return null;
     }
     annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
-    annotationText = annotationText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
+    annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
     return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
@@ -294,7 +291,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
         return null;
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    replyText = replyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 
@@ -309,6 +306,6 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
         return null;
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
