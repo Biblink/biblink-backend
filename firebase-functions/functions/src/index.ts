@@ -213,21 +213,53 @@ function spanify(match: string) { //This function creates a span that encapsulat
     return span;
 }   
 
-exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => { //this firebase function formats posts with the above functions
+exports.annotationRegex = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}').onWrite((event) => { 
     if (!event.data.exists) {
         return null;
     }
     const data = event.data.data();
-    let postText: string = data[ 'text' ];
+    let annotationText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
         return null;
     }
-    postText = postText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
-    postText = postText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
-    const foundLinks = postText.match(/<a[^>]*>([^<]+)<\/a>/g);
-    const foundVerses = postText.match(/(<span\s.+>)(.)*(<\/span>)/g);
-    return event.data.ref.update({ htmlText: postText, lastUpdated: now, links: foundLinks, verses: foundVerses });
+    annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
+    annotationText = annotationText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
+    const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
+    const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
+    return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
+});
+
+exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((event) => { 
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let replyText: string = data[ 'text' ];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+        return null;
+    }
+    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    replyText = replyText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
+    return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
+});
+
+exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => { //this firebase function formats posts with spanify and httpRGX
+    if (!event.data.exists) {
+        return null;
+    }
+    const data = event.data.data();
+    let annotationText: string = data[ 'text' ];
+    const now = new Date().getTime();
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
+        return null;
+    }
+    annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
+    annotationText = annotationText.replace(/(Song)?\s?(of)?\s(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify) //adds spans
+    const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
+    const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
+    return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
 
 exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => { //this function does the exact same thing but with replies
