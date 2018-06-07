@@ -60,107 +60,6 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
     });
 });
 
-/**
- * The code below was copied from : https://github.com/firebase/functions-samples/blob/master/generate-thumbnail/functions/index.js
- * And edited slightly to match our project
- */
-
-// const THUMB_MAX_HEIGHT = 200;
-// const THUMB_MAX_WIDTH = 200;
-// const THUMB_PREFIX = 'thumb_';
-
-
-// exports.generateThumbnail = functions.storage.object().onChange((event) => {
-//     const filePath = event.data.name;
-//     const contentType = event.data.contentType;
-//     const fileDir = path.dirname(filePath);
-//     const fileName = path.basename(filePath);
-//     const info = fileName.split('-')[ 1 ].split('_');
-//     const id = info[ 0 ];
-//     const isGroup = info[ 1 ] === 'true';
-//     const imageType = info[ 2 ];
-//     const thumbFilePath = path.normalize(path.join(fileDir, `${ THUMB_PREFIX }${ fileName }`));
-//     const tempLocalFile = path.join(os.tmpdir(), filePath);
-//     const tempLocalDir = path.dirname(tempLocalFile);
-//     const tempLocalThumbFile = path.join(os.tmpdir(), thumbFilePath);
-
-//     if (isGroup && imageType === 'banner') {
-//         return null;
-//     }
-
-//     if (!contentType.startsWith('image/')) {
-//         console.log('This is not an image.');
-//         return null;
-//     }
-
-
-//     if (fileName.startsWith(THUMB_PREFIX)) {
-//         console.log('Already a Thumbnail.');
-//         return null;
-//     }
-
-
-//     if (event.data.resourceState === 'not_exists') {
-//         console.log('This is a deletion event.');
-//         return null;
-//     }
-
-
-//     const bucket = gcs.bucket(event.data.bucket);
-//     const file = bucket.file(filePath);
-//     const thumbFile = bucket.file(thumbFilePath);
-//     const metadata = { contentType: contentType };
-
-
-//     return mkdirp(tempLocalDir).then(() => {
-
-//         return file.download({ destination: tempLocalFile });
-//     }).then(() => {
-//         console.log('The file has been downloaded to', tempLocalFile);
-
-//         return spawn('convert', [ tempLocalFile, '-thumbnail', `${ THUMB_MAX_WIDTH }x${ THUMB_MAX_HEIGHT }>`, tempLocalThumbFile ], { capture: [ 'stdout', 'stderr' ] });
-//     }).then(() => {
-//         console.log('Thumbnail created at', tempLocalThumbFile);
-
-//         return bucket.upload(tempLocalThumbFile, { destination: thumbFilePath, metadata: metadata });
-//     }).then(() => {
-//         console.log('Thumbnail uploaded to Storage at', thumbFilePath);
-
-//         fs.unlinkSync(tempLocalFile);
-//         fs.unlinkSync(tempLocalThumbFile);
-
-//         const config = {
-//             action: 'read',
-//             expires: '03-01-2500',
-//         };
-//         return Promise.all([
-//             thumbFile.getSignedUrl(config),
-//             file.getSignedUrl(config),
-//         ]);
-//     }).then((results) => {
-//         console.log('Got Signed URLs.');
-//         const thumbResult = results[ 0 ];
-//         const originalResult = results[ 1 ];
-//         const thumbFileUrl = thumbResult[ 0 ];
-//         const fileUrl = originalResult[ 0 ];
-//         if (isGroup) {
-//             return db.collection('studies').doc(id).get().then((res) => {
-//                 const data = res.data()[ 'metadata' ]
-//                 data[ 'profileImage' ] = thumbFileUrl;
-//                 return db.collection('studies').doc(id).update({ 'metadata': data });
-//             });
-//         } else {
-//             console.log(id);
-//             return db.collection('users').doc(id).get().then(res => {
-//                 const data = res.data()[ 'data' ]
-//                 data[ 'profileImage' ] = thumbFileUrl;
-//                 return db.collection('users').doc(id).update({ 'data': data });
-//             });
-//         }
-//     }).then(() => console.log('Thumbnail URLs saved to database.'));
-// });
-
-
 const httpRGX = /(https:|http:)+(\/\/)+/g; //defines regular expression for finding links that already have http protocol on them
 function anchorify(match: string) {
     const httpTest = httpRGX.test(match)
@@ -188,27 +87,25 @@ const bookList = [ 'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', '
 
 function spanify(match: string) { //This function creates a span that encapsulates the verse references
     const rawRef = match.match(/(\d+:+.*)(\d){1}/g);
-    console.log(rawRef)
-    const stringRef = rawRef.join("").trim()
-    console.log(stringRef)
-    let bookCont = ""
-    let refCont = ""
+    const stringRef = rawRef.join("").trim();
+    let bookCont = "";
+    let refCont = "";
     if (stringRef.endsWith(",")) {
         const slicedRef = stringRef.slice(0, -1);
         const squishedRef = slicedRef.replace(' ', '')
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
-        const stringBook = rawBook.join("").trim()
+        const stringBook = rawBook.join("").trim();
         //const newMatch = stringBook.concat(" " + squishedRef)
-        bookCont = stringBook
-        refCont = squishedRef
+        bookCont = stringBook;
+        refCont = squishedRef;
     }
     else {
-        const squishedRef = stringRef.replace(' ', '')
-        const rawBook = match.match(/((\w)*[^:,;.'"\d])/g)
-        const stringBook = rawBook.join("").trim()
+        const squishedRef = stringRef.replace(' ', '');
+        const rawBook = match.match(/((\w)*[^:,;.'"\d])/g);
+        const stringBook = rawBook.join("").trim();
         //const newMatch = stringBook.concat(" " + squishedRef)
-        bookCont = stringBook
-        refCont = squishedRef
+        bookCont = stringBook;
+        refCont = squishedRef;
     }
 
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
@@ -275,7 +172,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
         return null;
     }
     annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
-    annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+(\d)+(:)+([\d,-\s;]*?)(\d){1}/g, spanify) //adds spans
+    annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+(\d)+(:)+([\d,-\s;]*)(\d){1}/g, spanify) //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
     return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
