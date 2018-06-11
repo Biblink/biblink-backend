@@ -10,10 +10,6 @@
 
 ## TODO List
 
-* Implement Flask Logging
-* ~~Deploy to Production Server on Vultr~~
-* Receive Financial Approval of Hosting Domain and Server
-
 ## Setup List
 
 ### 1. Ruby Setup
