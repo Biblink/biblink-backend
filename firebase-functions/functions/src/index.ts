@@ -130,7 +130,7 @@ exports.annotationRegex = functions.firestore.document('studies/{studyId}/annota
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
         return null;
     }
-    annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
+    annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^,;. ])+/g, anchorify) //adds anchors
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
 
