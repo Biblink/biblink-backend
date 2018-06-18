@@ -66,13 +66,10 @@ exports.updateUserRole = functions.firestore.document('studies/{studyId}/members
     const userId = event.params.memberId;
     const studyId = event.params.studyId;
     const newRole = event.data.data().role;
-    const userStudy = db.collection('users').doc('userId').collection('studies').doc('studyId');
-    const extantData = userStudy.get().then(snapshot => {
-        let extantRole = snapshot.data()[ 'role' ];
-        extantRole = newRole;
-        const updateUserRole = userStudy.update({ role: extantRole})
+    const userStudy = db.collection('users').doc(`${ userId }`).collection('studies').doc(`${ studyId }`);
+    return userStudy.update({ role: newRole }).then(() => {
+        console.log(`updated user ${ userId } to role ${ newRole } in study ${ studyId }`);
     });
-    return `updated user ${ userId } to role ${ newRole } in study ${ studyId }`
 });
 
 const httpRGX = /(https:|http:)+(\/\/)+/g; //defines regular expression for finding links that already have http protocol on them
