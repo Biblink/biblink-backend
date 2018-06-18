@@ -13,7 +13,8 @@ admin.initializeApp({
 //opens the database with the admin account
 const db = admin.firestore()
 
-const linkRegex = /(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ,.;\n])+/g;
+const linkRegex = /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g; // current regex taken from user Daveo on stack overflow
+// old regex => /(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ,.;\n])+/g
 //this function updates the name of study leaders
 exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((change, context) => {
     //grabs updated name value
