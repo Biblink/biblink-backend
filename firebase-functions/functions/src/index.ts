@@ -1,14 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { PassThrough } from 'stream';
-const gcs = require('@google-cloud/storage')({ keyFilename: 'admin_key.json' });
-import *  as mkdirp from 'mkdirp-promise';
-const spawn = require('child-process-promise').spawn;
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
 import * as Fuzzy from 'fuzzyset.js';
-import { user } from 'firebase-functions/lib/providers/auth';
 
 
 //admin account creation so the function can modify the database
