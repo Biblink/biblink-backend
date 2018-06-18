@@ -13,7 +13,7 @@ admin.initializeApp({
 //opens the database with the admin account
 const db = admin.firestore()
 
-const linkRegex = /(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ])+/g;
+const linkRegex = /(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ,.;\n])+/g;
 //this function updates the name of study leaders
 exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((change, context) => {
     //grabs updated name value
