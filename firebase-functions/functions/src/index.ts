@@ -203,7 +203,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
+    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ])+/g, anchorify)
     replyText = replyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
 });
