@@ -11,6 +11,7 @@ admin.initializeApp({
 });
 //opens the database with the admin account
 const db = admin.firestore();
+const linkRegex = /(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ,.;\n])+/g;
 //this function updates the name of study leaders
 exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((change, context) => {
     //grabs updated name value
@@ -123,7 +124,7 @@ exports.annotationRegex = functions.firestore.document('studies/{studyId}/annota
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify); //adds anchors
+    annotationText = annotationText.replace(linkRegex, anchorify); //adds anchors
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
     return change.after.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks });
@@ -138,7 +139,7 @@ exports.annotationReply = functions.firestore.document('studies/{studyId}/annota
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
+    replyText = replyText.replace(linkRegex, anchorify);
     return change.after.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 exports.annotationSubreply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((change, context) => {
@@ -151,7 +152,7 @@ exports.annotationSubreply = functions.firestore.document('studies/{studyId}/ann
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
+    subreplyText = subreplyText.replace(linkRegex, anchorify);
     return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
 exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((change, context) => {
@@ -164,7 +165,7 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify); //adds anchors
+    annotationText = annotationText.replace(linkRegex, anchorify); //adds anchors
     annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+(\d)+(:)+([\d,-\s;]*)(\d){1}/g, spanify); //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
@@ -180,7 +181,7 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ])+/g, anchorify);
+    replyText = replyText.replace(linkRegex, anchorify);
     replyText = replyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
     return change.after.ref.update({ htmlText: replyText, lastUpdated: now });
 });
@@ -194,7 +195,7 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
-    subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify);
+    subreplyText = subreplyText.replace(linkRegex, anchorify);
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
     return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
