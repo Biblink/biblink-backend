@@ -12,13 +12,12 @@ admin.initializeApp({
 });
 //opens the database with the admin account
 const db = admin.firestore()
-
 //this function updates the name of study leaders
-exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((event) => {
+exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((change, context) => {
     //grabs updated name value
-    const updatedValue = event.data.data();
+    const updatedValue = change.after.data();
     const name = updatedValue.name;
-    const userId = event.params.userId;
+    const userId = context.params.userId;
     //finds which studies the user is a leader in
     const userStudies = db.collection('users')
         .doc(userId)
@@ -54,10 +53,10 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
     });
 });
 
-exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((event) => {
-    const userId = event.params.memberId;
-    const studyId = event.params.studyId;
-    const newRole = event.data.data().role;
+exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((change, context) => {
+    const userId = context.params.memberId;
+    const studyId = context.params.studyId;
+    const newRole = change.after.data().role;
     const userStudy = db.collection('users').doc(`${ userId }`).collection('studies').doc(`${ studyId }`);
     return userStudy.update({ role: newRole }).then(() => {
         console.log(`updated user ${ userId } to role ${ newRole } in study ${ studyId }`);
@@ -121,11 +120,11 @@ function spanify(match: string) { //This function creates a span that encapsulat
     return span;
 }
 
-exports.annotationRegex = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}').onWrite((event) => {
-    if (!event.data.exists) {
+exports.annotationRegex = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}').onWrite((change, context) => {
+    if (!change.after.exists) {
         return null;
     }
-    const data = event.data.data();
+    const data = change.after.data();
     let annotationText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
@@ -134,42 +133,43 @@ exports.annotationRegex = functions.firestore.document('studies/{studyId}/annota
     annotationText = annotationText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify) //adds anchors
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
-    return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks });
+
+    return change.after.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks });
 });
 
-exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((event) => {
-    if (!event.data.exists) {
+exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((change, context) => {
+    if (!change.after.exists) {
         return null;
     }
-    const data = event.data.data();
+    const data = change.after.data();
     let replyText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
+    return change.after.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 
-exports.annotationSubreply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => { //same function but for subreplies
-    if (!event.data.exists) {
+exports.annotationSubreply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((change, context) => { //same function but for subreplies
+    if (!change.after.exists) {
         return null;
     }
-    const data = event.data.data();
+    const data = change.after.data();
     let subreplyText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
         return null;
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
-    return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
+    return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
 
-exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((event) => { //this firebase function formats posts with spanify and httpRGX
-    if (!event.data.exists) {
+exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((change, context) => { //this firebase function formats posts with spanify and httpRGX
+    if (!change.after.exists) {
         return null;
     }
-    const data = event.data.data();
+    const data = change.after.data();
     let annotationText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) { //stops an infinite loop
@@ -179,14 +179,14 @@ exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postI
     annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+(\d)+(:)+([\d,-\s;]*)(\d){1}/g, spanify) //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
-    return event.data.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
+    return change.after.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
 });
 
-exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((event) => { //this function does the exact same thing but with replies
-    if (!event.data.exists) {
+exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((change, context) => { //this function does the exact same thing but with replies
+    if (!change.after.exists) {
         return null;
     }
-    const data = event.data.data();
+    const data = change.after.data();
     let replyText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
@@ -194,14 +194,14 @@ exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{post
     }
     replyText = replyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ])+/g, anchorify)
     replyText = replyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    return event.data.ref.update({ htmlText: replyText, lastUpdated: now });
+    return change.after.ref.update({ htmlText: replyText, lastUpdated: now });
 });
 
-exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((event) => { //same function but for subreplies
-    if (!event.data.exists) {
+exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((change, context) => { //same function but for subreplies
+    if (!change.after.exists) {
         return null;
     }
-    const data = event.data.data();
+    const data = change.after.data();
     let subreplyText: string = data[ 'text' ];
     const now = new Date().getTime();
     if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
@@ -209,5 +209,5 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     }
     subreplyText = subreplyText.replace(/(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})/g, anchorify)
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
-    return event.data.ref.update({ htmlText: subreplyText, lastUpdated: now });
+    return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });

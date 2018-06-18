@@ -11,8 +11,8 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "firebase-admin": "~5.8.1",
-    "firebase-functions": "^0.8.1",
+    "firebase-admin": "^5.12.1",
+    "firebase-functions": "^1.0.4",
     "fuzzyset.js": "0.0.4"
   },
   "devDependencies": {
