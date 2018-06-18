@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as Fuzzy from 'fuzzyset.js';
+import { user } from 'firebase-functions/lib/providers/auth';
 
 
 //admin account creation so the function can modify the database
@@ -19,6 +20,7 @@ admin.initializeApp({
 });
 //opens the database with the admin account
 const db = admin.firestore()
+
 //this function updates the name of study leaders
 exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((event) => {
     //grabs updated name value
@@ -58,6 +60,19 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
             return `updated studies with leader: ${ name }`;
         }
     });
+});
+
+exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((event) => {
+    const userId = event.params.memberId;
+    const studyId = event.params.studyId;
+    const newRole = event.data.data().role;
+    const userStudy = db.collection('users').doc('userId').collection('studies').doc('studyId');
+    const extantData = userStudy.get().then(snapshot => {
+        let extantRole = snapshot.data()[ 'role' ];
+        extantRole = newRole;
+        const updateUserRole = userStudy.update({ role: extantRole})
+    });
+    return `updated user ${ userId } to role ${ newRole } in study ${ studyId }`
 });
 
 const httpRGX = /(https:|http:)+(\/\/)+/g; //defines regular expression for finding links that already have http protocol on them
