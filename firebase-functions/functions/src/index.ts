@@ -15,6 +15,10 @@ const db = admin.firestore()
 
 const linkRegex = /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g; // current regex taken from user Daveo on stack overflow
 // old regex => /(www.|https:|http:)?([\S]+)([.]{1})([\w]{1,4})([^ ,.;\n])+/g
+
+function capitalize(str: string) {
+    return str.charAt(0).toUpperCase() + str.substr(1);
+}
 //this function updates the name of study leaders
 exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((change, context) => {
     //grabs updated name value
@@ -213,4 +217,64 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     subreplyText = subreplyText.replace(linkRegex, anchorify)
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify)
     return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
+});
+
+exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts/{postId}').onCreate(async (change, context) => {
+    const postData = change.data();
+    const studyID = context.params.studyId;
+    const creatorID = postData[ 'creatorID' ];
+    const date = new Date();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: Date.now().toString()
+        }
+    }
+    const userData = db.collection('users').doc(creatorID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+            const firstName = user[ 'firstName' ];
+            const imageUrl = user[ 'data' ][ 'profileImage' ];
+
+            payload.notification.title = `New ${ capitalize(postData[ 'type' ]) }`;
+            payload.notification.body = `${ firstName } just posted a new ${ postData[ 'type' ] }`;
+            payload.notification.icon = imageUrl;
+            console.log('Created payload:', payload);
+        });
+    const memberIDsPromise = userData.then(() => {
+        return db.doc(`studies/${ studyID }`).collection('members').get().then((members) => {
+            let memberIDs = [];
+            members.forEach((member) => {
+                memberIDs = [ ...memberIDs, member.id ];
+            });
+            return memberIDs;
+        });
+    });
+
+    return memberIDsPromise.then((ids) => {
+        const promises = []
+        ids.forEach((id: string) => {
+            db.doc(`users/${ id }`).get()
+                .then(snapshot => snapshot.data())
+                .then(user => {
+                    let tokens = []
+                    if (user.fcmTokens !== undefined) {
+                        tokens = user.fcmTokens ? Object.keys(user.fcmTokens) : [];
+                        if (!tokens.length) {
+                            throw new Error('User does not have any tokens!');
+                        }
+                    } else {
+                        throw new Error('User does not have any tokens!');
+                    }
+                    const addNotif = db.doc(`users/${ id }`).collection('notifications').add(payload);
+                    return admin.messaging().sendToDevice(tokens, payload);
+                })
+                .catch(err => console.log(err))
+
+        });
+        return 'finished sending notifications';
+    });
 });
