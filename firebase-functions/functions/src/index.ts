@@ -261,6 +261,7 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
                 .then(snapshot => snapshot.data())
                 .then(user => {
                     let tokens = []
+                    const addNotif = db.doc(`users/${ id }`).collection('notifications').add(payload);
                     if (user.fcmTokens !== undefined) {
                         tokens = user.fcmTokens ? Object.keys(user.fcmTokens) : [];
                         if (!tokens.length) {
@@ -269,7 +270,6 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
                     } else {
                         throw new Error('User does not have any tokens!');
                     }
-                    const addNotif = db.doc(`users/${ id }`).collection('notifications').add(payload);
                     return admin.messaging().sendToDevice(tokens, payload);
                 })
                 .catch(err => console.log(err))
