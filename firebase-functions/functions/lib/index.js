@@ -11,11 +11,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const Fuzzy = require("fuzzyset.js");
+const express = require("express");
+const fetch = require("node-fetch");
+const app = express();
+const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
+const appUrl = 'https://biblya-ed2ec.firebaseapp.com';
 //admin account creation so the function can modify the database
 const adminAccount = require('../admin_key.json');
 admin.initializeApp({
     credential: admin.credential.cert(adminAccount),
-    databaseURL: 'https://biblya-ed2ec.firebaseio.com/'
+    databaseURL: `https://${appUrl}`
 });
 //opens the database with the admin account
 const db = admin.firestore();
@@ -270,4 +275,32 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
         return 'finished sending notifications';
     });
 }));
+const ROUTES = [
+    '/',
+    '/search',
+    '/get-started',
+    '/sign-in',
+    '/about',
+    '/legal/privacy-policy',
+    '/legal/terms-of-use',
+    '/organization/contact',
+    '/organization/updates-and-releases'
+];
+app.get('*', (req, res) => {
+    if (ROUTES.indexOf(req.url) === -1) {
+        fetch(`${appUrl}/?path=${req.url}`)
+            .then(response => response.text())
+            .then(body => {
+            res.send(body.toString());
+        });
+    }
+    else {
+        fetch(`${appUrl}${req.url}`)
+            .then(response => response.text())
+            .then(body => {
+            res.send(body.toString());
+        });
+    }
+});
+exports.app = functions.https.onRequest(app);
 //# sourceMappingURL=index.js.map

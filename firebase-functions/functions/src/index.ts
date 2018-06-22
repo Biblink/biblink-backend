@@ -1,14 +1,18 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as Fuzzy from 'fuzzyset.js';
-
-
+import * as express from 'express';
+import * as fetch from 'node-fetch';
+import * as url from 'url';
+const app = express();
+const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
+const appUrl = 'https://biblya-ed2ec.firebaseapp.com';
 //admin account creation so the function can modify the database
 const adminAccount = require('../admin_key.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(adminAccount),
-    databaseURL: 'https://biblya-ed2ec.firebaseio.com/'
+    databaseURL: `https://${ appUrl }`
 });
 //opens the database with the admin account
 const db = admin.firestore()
@@ -143,6 +147,9 @@ exports.annotationRegex = functions.firestore.document('studies/{studyId}/annota
 
     return change.after.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks });
 });
+
+
+
 
 exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((change, context) => {
     if (!change.after.exists) {
@@ -279,3 +286,34 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
         return 'finished sending notifications';
     });
 });
+
+
+const ROUTES = [
+    '/',
+    '/search',
+    '/get-started',
+    '/sign-in',
+    '/about',
+    '/legal/privacy-policy',
+    '/legal/terms-of-use',
+    '/organization/contact',
+    '/organization/updates-and-releases'
+];
+
+app.get('*', (req, res) => {
+    if (ROUTES.indexOf(req.url) === -1) {
+        fetch(`${ appUrl }/?path=${ req.url }`)
+            .then(response => response.text())
+            .then(body => {
+                res.send(body.toString());
+            });
+    } else {
+        fetch(`${ appUrl }${ req.url }`)
+            .then(response => response.text())
+            .then(body => {
+                res.send(body.toString());
+            });
+    }
+});
+
+exports.app = functions.https.onRequest(app);
