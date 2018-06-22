@@ -291,7 +291,7 @@ app.get('*', (req, res) => {
         console.log('I am in here');
         return new Promise((resolve, reject) => {
             resolve();
-            res.status(301).redirect(`${appUrl}/index.html?path=${req.url}`);
+            res.status(301).redirect(`${appUrl}/loading?path=${req.url}`);
         });
     }
     else {
