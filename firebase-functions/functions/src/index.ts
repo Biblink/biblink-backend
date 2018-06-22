@@ -301,18 +301,19 @@ const ROUTES = [
 ];
 
 app.get('*', (req, res) => {
-    if (ROUTES.indexOf(req.url) === -1) {
-        fetch(`${ appUrl }/?path=${ req.url }`)
-            .then(response => response.text())
-            .then(body => {
-                res.send(body.toString());
-            });
+    if (ROUTES.indexOf(req.url) === -1 && req.url.indexOf('.') === -1) {
+        console.log('I am in here');
+        return new Promise((resolve, reject) => {
+            resolve();
+            res.status(301).redirect(`${ appUrl }/index.html?path=${ req.url }`)
+        });
     } else {
-        fetch(`${ appUrl }${ req.url }`)
+        console.log('just serving up regular pages');
+        return fetch(`${ appUrl }${ req.url }`)
             .then(response => response.text())
             .then(body => {
-                res.send(body.toString());
-            });
+                res.status(200).send(body.toString());
+            }).catch((error) => res.status(500).send());
     }
 });
 
