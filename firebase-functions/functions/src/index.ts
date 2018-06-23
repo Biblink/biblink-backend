@@ -119,7 +119,7 @@ function spanify(match: string) { //This function creates a span that encapsulat
     const topMatch = fuzzyMatchs[ 0 ];
     const reference = refCont//matchCont.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[ 1 ];
-    const span = `<span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`; //uses the number bit and the book bit to make an html element
+    const span = ` <span class="verse-link" data-verse="${ bookName.trim() } ${ reference }">${ bookName.trim() } ${ reference }</span>`; //uses the number bit and the book bit to make an html element
     return span;
 }
 
