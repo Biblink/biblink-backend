@@ -287,6 +287,19 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
     });
 });
 
+exports.countDiscussionNumber = functions.firestore.document('studies/{studyId}/topics/{topicId}/discussions/{documentId}').onCreate((change, context) => {
+    const topicId = context.params.topicId;
+    const ref = db.doc(`/studies/${ context.params.studyId }/topics/${ topicId }`)
+    return ref.get()
+        .then(snapshot => snapshot.data())
+        .then((topic) => {
+            topic[ 'discussionNumber' ] += 1
+            return topic;
+        })
+        .then((topic) => {
+            return ref.update(topic);
+        });
+});
 
 const ROUTES = [
     '/',
