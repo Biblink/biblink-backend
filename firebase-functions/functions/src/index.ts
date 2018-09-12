@@ -4,6 +4,7 @@ import * as Fuzzy from 'fuzzyset.js';
 import * as express from 'express';
 import * as fetch from 'node-fetch';
 import * as url from 'url';
+import * as sgMail from '@sendgrid/mail'
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
 const appUrl = 'biblink.io';
@@ -18,6 +19,7 @@ admin.initializeApp({
     credential: admin.credential.cert(adminAccount),
     databaseURL: databaseUrl
 });
+
 //opens the database with the admin account
 const db = admin.firestore()
 
@@ -391,3 +393,23 @@ app.get('*', (req, res) => {
 });
 
 exports.app = functions.https.onRequest(app);
+
+exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
+    const SENDGRID_API_KEY = functions.config().sendgrid.key;
+    sgMail.setApiKey(SENDGRID_API_KEY);
+    const email = req.body.email;
+    const name = req.body.name;
+    const msg = {
+        to: email,
+        from: 'teambiblink@gmail.com',
+        subject: 'Welcome to Biblink',
+        templateId: 'd-360af3ce0d5e4159946db509de657734',
+        substitutionWrappers: [ '{{', '}}' ],
+        substitutions: {
+            name: name
+        }
+    };
+    return sgMail.send(msg)
+        .then(() => res.status(200).send('email sent!'))
+        .catch(err => res.status(400).send(err))
+});
