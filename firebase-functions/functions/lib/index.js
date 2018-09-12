@@ -14,9 +14,10 @@ const Fuzzy = require("fuzzyset.js");
 const express = require("express");
 const fetch = require("node-fetch");
 const url = require("url");
+const sgMail = require("@sendgrid/mail");
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
-const appUrl = 'https://biblink.io';
+const appUrl = 'biblink.io';
 const renderUrl = 'https://render-tron.appspot.com/render';
 // Deploy your own instance of Rendertron for production
 // const renderUrl = 'your-rendertron-url';
@@ -24,8 +25,10 @@ const renderUrl = 'https://render-tron.appspot.com/render';
 const adminAccount = require('../admin_key.json');
 admin.initializeApp({
     credential: admin.credential.cert(adminAccount),
-    databaseURL: `https://${appUrl}`
+    databaseURL: databaseUrl
 });
+const SENDGRID_API_KEY = functions.config().sendgrid.key;
+sgMail.setApiKey(SENDGRID_API_KEY);
 //opens the database with the admin account
 const db = admin.firestore();
 const linkRegex = /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g; // current regex taken from user Daveo on stack overflow
@@ -349,7 +352,7 @@ app.get('*', (req, res) => {
         });
     }
     else {
-        fetch(`${appUrl}`)
+        fetch(`https://${appUrl}`)
             .then(response => response.text())
             .then(body => {
             res.send(body.toString());
@@ -357,4 +360,21 @@ app.get('*', (req, res) => {
     }
 });
 exports.app = functions.https.onRequest(app);
+exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
+    const email = req.body.email;
+    const name = req.body.name;
+    const msg = {
+        to: email,
+        from: 'teambiblink@gmail.com',
+        subject: 'Welcome to Biblink',
+        templateId: 'd-360af3ce0d5e4159946db509de657734',
+        substitutionWrappers: ['{{', '}}'],
+        substitutions: {
+            name: name
+        }
+    };
+    return sgMail.send(msg)
+        .then(() => res.status(200).send('email sent!'))
+        .catch(err => res.status(400).send(err));
+});
 //# sourceMappingURL=index.js.map

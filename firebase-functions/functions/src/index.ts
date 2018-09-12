@@ -19,7 +19,8 @@ admin.initializeApp({
     credential: admin.credential.cert(adminAccount),
     databaseURL: databaseUrl
 });
-
+const SENDGRID_API_KEY = functions.config().sendgrid.key;
+sgMail.setApiKey(SENDGRID_API_KEY);
 //opens the database with the admin account
 const db = admin.firestore()
 
@@ -395,8 +396,7 @@ app.get('*', (req, res) => {
 exports.app = functions.https.onRequest(app);
 
 exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
-    const SENDGRID_API_KEY = functions.config().sendgrid.key;
-    sgMail.setApiKey(SENDGRID_API_KEY);
+
     const email = req.body.email;
     const name = req.body.name;
     const msg = {
