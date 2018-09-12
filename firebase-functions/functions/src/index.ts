@@ -6,7 +6,11 @@ import * as fetch from 'node-fetch';
 import * as url from 'url';
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
-const appUrl = 'https://biblya-ed2ec.firebaseapp.com';
+const appUrl = 'https://biblink.io';
+const renderUrl = 'https://render-tron.appspot.com/render';
+
+// Deploy your own instance of Rendertron for production
+// const renderUrl = 'your-rendertron-url';
 //admin account creation so the function can modify the database
 const adminAccount = require('../admin_key.json');
 
@@ -301,34 +305,89 @@ exports.countDiscussionNumber = functions.firestore.document('studies/{studyId}/
         });
 });
 
-const ROUTES = [
-    '/',
-    '/search',
-    '/get-started',
-    '/sign-in',
-    '/about',
-    '/legal/privacy-policy',
-    '/legal/terms-of-use',
-    '/organization/contact',
-    '/organization/updates-and-releases'
-];
+
+
+
+
+
+// Generates the URL 
+function generateUrl(request) {
+    return url.format({
+        protocol: request.protocol,
+        host: appUrl,
+        pathname: request.originalUrl
+    });
+}
+
+// List of bots to target, add more if you'd like
+function detectBot(userAgent) {
+
+    const bots = [
+        // search engine crawler bots
+        'googlebot',
+        'bingbot',
+        'yandexbot',
+        'duckduckbot',
+        'slurp',
+        // social media link bots
+        'twitterbot',
+        'facebookexternalhit',
+        'linkedinbot',
+        'embedly',
+        'baiduspider',
+        'pinterest',
+        'slackbot',
+        'vkshare',
+        'facebot',
+        'outbrain',
+        'w3c_validator'
+    ]
+
+
+    // Return true if the user-agent header matches a bot namespace
+    const agent = userAgent.toLowerCase()
+
+    for (const bot of bots) {
+        if (agent.indexOf(bot) > -1) {
+            console.log('bot detected', bot, agent)
+            return true
+        }
+    }
+
+    console.log('no bots found')
+    return false
+
+}
 
 app.get('*', (req, res) => {
-    if (ROUTES.indexOf(req.url) === -1 && req.url.indexOf('.') === -1) {
-        console.log('I am in here');
-        return new Promise((resolve, reject) => {
-            resolve();
-            res.status(301).redirect(`${ appUrl }/loading?path=${ req.url }`)
-        });
-    } else {
-        console.log('just serving up regular pages');
-        return fetch(`${ appUrl }${ req.url }`)
+
+    const isBot = detectBot(req.headers[ 'user-agent' ]);
+
+    if (isBot) {
+
+        const botUrl = generateUrl(req);
+        // If Bot, fetch url via rendertron
+
+        fetch(`${ renderUrl }/${ botUrl }`)
             .then(response => response.text())
             .then(body => {
-                res.status(200).send(body.toString());
-            }).catch((error) => res.status(500).send());
+
+                // Set the Vary header to cache the user agent, based on code from:
+                // https://github.com/justinribeiro/pwa-firebase-functions-botrender
+                res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
+                res.set('Vary', 'User-Agent');
+
+                res.send(body.toString())
+
+            });
+
+    } else {
+        fetch(`https://${ appUrl }`)
+            .then(response => response.text())
+            .then(body => {
+                res.send(body.toString());
+            })
     }
 });
 
 exports.app = functions.https.onRequest(app);
-// TODO: Add Rendertron Functions
