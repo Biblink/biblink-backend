@@ -6,7 +6,7 @@ import * as fetch from 'node-fetch';
 import * as url from 'url';
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
-const appUrl = 'https://biblink.io';
+const appUrl = 'biblink.io';
 const renderUrl = 'https://render-tron.appspot.com/render';
 
 // Deploy your own instance of Rendertron for production
@@ -16,7 +16,7 @@ const adminAccount = require('../admin_key.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(adminAccount),
-    databaseURL: `https://${ appUrl }`
+    databaseURL: databaseUrl
 });
 //opens the database with the admin account
 const db = admin.firestore()
