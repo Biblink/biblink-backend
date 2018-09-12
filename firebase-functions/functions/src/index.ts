@@ -5,6 +5,7 @@ import * as express from 'express';
 import * as fetch from 'node-fetch';
 import * as url from 'url';
 import * as sgMail from '@sendgrid/mail'
+import * as cors from 'cors';
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
 const appUrl = 'biblink.io';
@@ -396,20 +397,21 @@ app.get('*', (req, res) => {
 exports.app = functions.https.onRequest(app);
 
 exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
-
-    const email = req.body.email;
-    const name = req.body.name;
-    const msg = {
-        to: email,
-        from: 'teambiblink@gmail.com',
-        subject: 'Welcome to Biblink',
-        templateId: 'd-360af3ce0d5e4159946db509de657734',
-        substitutionWrappers: [ '{{', '}}' ],
-        substitutions: {
-            name: name
-        }
-    };
-    return sgMail.send(msg)
-        .then(() => res.status(200).send('email sent!'))
-        .catch(err => res.status(400).send(err))
+    cors({ origin: true })(req, res, () => {
+        const email = req.body.email;
+        const name = req.body.name;
+        const msg = {
+            to: email,
+            from: 'teambiblink@gmail.com',
+            subject: 'Welcome to Biblink',
+            templateId: 'd-360af3ce0d5e4159946db509de657734',
+            substitutionWrappers: [ '{{', '}}' ],
+            substitutions: {
+                name: name
+            }
+        };
+        return sgMail.send(msg)
+            .then(() => res.status(200).send('email sent!'))
+            .catch(err => res.status(400).send(err))
+    });
 });
