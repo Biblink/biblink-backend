@@ -246,7 +246,7 @@ function sendNotificationToMembers(payload, creatorID: string, studyID: string) 
     return memberIDsPromise.then((ids: any[]) => {
         const promises = []
         ids.forEach((id: string) => {
-            if (id !== creatorID) {
+            if (id === creatorID) {
                 db.doc(`users/${ id }`).get()
                     .then(snapshot => snapshot.data())
                     .then(user => {
