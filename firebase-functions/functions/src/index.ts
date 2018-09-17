@@ -273,7 +273,6 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
     const postData = change.data();
     const studyID = context.params.studyId;
     const creatorID = postData[ 'creatorID' ];
-    const date = new Date();
     const payload = {
         notification: {
             title: '',
@@ -303,7 +302,6 @@ exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{study
     const postData = change.data();
     const studyID = context.params.studyId;
     const creatorID = postData[ 'creatorID' ];
-    const date = new Date();
     const payload = {
         notification: {
             title: '',
@@ -333,7 +331,6 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
     const studyID = context.params.studyId;
     const topicID = context.params.topicId;
     const creatorID = postData[ 'creatorID' ];
-    const date = new Date();
     const payload = {
         notification: {
             title: '',
@@ -348,14 +345,15 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
         .then((user) => {
             const firstName = user[ 'firstName' ];
             const imageUrl = user[ 'data' ][ 'profileImage' ];
-            db.collection('studies').doc(studyID).collection('topics').doc(topicID).get()
+            const topicData = db.collection('studies').doc(studyID).collection('topics').doc(topicID).get()
                 .then(snapshot => snapshot.data())
                 .then((topic) => {
                     payload.notification.title = `New Discussion`;
                     payload.notification.body = `${ firstName } just posted a new discussion called ${ postData.title } in ${ topic.title }`;
                     payload.notification.icon = imageUrl;
                     console.log('Created payload:', payload);
-                })
+                });
+            return topicData;
         });
     return userData.then(() => {
         return sendNotificationToMembers(payload, creatorID, studyID);
@@ -365,7 +363,6 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
 exports.memberAddition = functions.firestore.document('studies/{studyId}/members/{memberId}').onCreate(async (change, context) => {
     const memberID = context.params.memberId;
     const studyID = context.params.studyId;
-    const date = new Date();
     const payload = {
         notification: {
             title: '',
@@ -380,14 +377,16 @@ exports.memberAddition = functions.firestore.document('studies/{studyId}/members
         .then((user) => {
             const firstName = user[ 'firstName' ];
             const imageUrl = user[ 'data' ][ 'profileImage' ];
-            db.collection('studies').doc(studyID).get()
+            const studyData = db.collection('studies').doc(studyID).get()
                 .then(snapshot => snapshot.data())
                 .then((study) => {
                     payload.notification.title = `New Member`;
                     payload.notification.body = `${ firstName } just joined ${ study.name }`;
                     payload.notification.icon = imageUrl;
                     console.log('Created payload:', payload);
-                })
+
+                });
+            return studyData;
         });
     return userData.then(() => {
         return sendNotificationToMembers(payload, memberID, studyID);
