@@ -93,7 +93,13 @@ function anchorify(match: string) {
         return anchor;
     }
     else { //if not, add the https:// and then make an anchor
-        const updateMatch = 'https://'.concat(match);
+        let updateMatch: string;
+        if (match.indexOf('http://') !== -1 || match.indexOf('https://') !== -1) {
+            updateMatch = match;
+        } else {
+            updateMatch = 'https://'.concat(match);
+        }
+
         const anchor = `<a class="more-link" target="_blank" href="${ updateMatch }">${ match }</a>`;
         return anchor;
     }
