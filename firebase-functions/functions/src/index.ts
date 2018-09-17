@@ -234,6 +234,41 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
 
+function sendNotificationToMembers(payload, creatorID: string, studyID: string) {
+    const memberIDsPromise = db.doc(`studies/${ studyID }`).collection('members').get().then((members) => {
+        let memberIDs = [];
+        members.forEach((member) => {
+            memberIDs = [ ...memberIDs, member.id ];
+        });
+        return memberIDs;
+    });
+
+    return memberIDsPromise.then((ids: any[]) => {
+        const promises = []
+        ids.forEach((id: string) => {
+            if (id !== creatorID) {
+                db.doc(`users/${ id }`).get()
+                    .then(snapshot => snapshot.data())
+                    .then(user => {
+                        let tokens = []
+                        const addNotif = db.doc(`users/${ id }`).collection('notifications').add(payload);
+                        if (user.fcmTokens !== undefined) {
+                            tokens = user.fcmTokens ? Object.keys(user.fcmTokens) : [];
+                            if (!tokens.length) {
+                                throw new Error('User does not have any tokens!');
+                            }
+                        } else {
+                            throw new Error('User does not have any tokens!');
+                        }
+                        return admin.messaging().sendToDevice(tokens, payload);
+                    })
+                    .catch(err => console.log(err))
+            }
+        });
+        return 'finished sending notifications';
+    });
+}
+
 exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts/{postId}').onCreate(async (change, context) => {
     const postData = change.data();
     const studyID = context.params.studyId;
@@ -259,39 +294,103 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
             payload.notification.icon = imageUrl;
             console.log('Created payload:', payload);
         });
-    const memberIDsPromise = userData.then(() => {
-        return db.doc(`studies/${ studyID }`).collection('members').get().then((members) => {
-            let memberIDs = [];
-            members.forEach((member) => {
-                memberIDs = [ ...memberIDs, member.id ];
-            });
-            return memberIDs;
-        });
-    });
 
-    return memberIDsPromise.then((ids) => {
-        const promises = []
-        ids.forEach((id: string) => {
-            if (id !== creatorID) {
-                db.doc(`users/${ id }`).get()
-                    .then(snapshot => snapshot.data())
-                    .then(user => {
-                        let tokens = []
-                        const addNotif = db.doc(`users/${ id }`).collection('notifications').add(payload);
-                        if (user.fcmTokens !== undefined) {
-                            tokens = user.fcmTokens ? Object.keys(user.fcmTokens) : [];
-                            if (!tokens.length) {
-                                throw new Error('User does not have any tokens!');
-                            }
-                        } else {
-                            throw new Error('User does not have any tokens!');
-                        }
-                        return admin.messaging().sendToDevice(tokens, payload);
-                    })
-                    .catch(err => console.log(err))
-            }
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, creatorID, studyID);
+    });
+});
+exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{studyId}/topics/{topicId}').onCreate(async (change, context) => {
+    const postData = change.data();
+    const studyID = context.params.studyId;
+    const creatorID = postData[ 'creatorID' ];
+    const date = new Date();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: Date.now().toString()
+        }
+    }
+    const userData = db.collection('users').doc(creatorID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+            const firstName = user[ 'firstName' ];
+            const imageUrl = user[ 'data' ][ 'profileImage' ];
+
+            payload.notification.title = `New Topic`;
+            payload.notification.body = `${ firstName } just created a new topic called ${ postData.title }`;
+            payload.notification.icon = imageUrl;
+            console.log('Created payload:', payload);
         });
-        return 'finished sending notifications';
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, creatorID, studyID);
+    });
+});
+exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}/topics/{topicId}/discussions/{discussionId}').onCreate(async (change, context) => {
+    const postData = change.data();
+    const studyID = context.params.studyId;
+    const topicID = context.params.topicId;
+    const creatorID = postData[ 'creatorID' ];
+    const date = new Date();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: Date.now().toString()
+        }
+    }
+    const userData = db.collection('users').doc(creatorID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+            const firstName = user[ 'firstName' ];
+            const imageUrl = user[ 'data' ][ 'profileImage' ];
+            db.collection('studies').doc(studyID).collection('topics').doc(topicID).get()
+                .then(snapshot => snapshot.data())
+                .then((topic) => {
+                    payload.notification.title = `New Discussion`;
+                    payload.notification.body = `${ firstName } just posted a new discussion called ${ postData.title } in ${ topic.title }`;
+                    payload.notification.icon = imageUrl;
+                    console.log('Created payload:', payload);
+                })
+        });
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, creatorID, studyID);
+    });
+});
+
+exports.memberAddition = functions.firestore.document('studies/{studyId}/members/{memberId}').onCreate(async (change, context) => {
+    const memberID = context.params.memberId;
+    const studyID = context.params.studyId;
+    const date = new Date();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: Date.now().toString()
+        }
+    }
+    const userData = db.collection('users').doc(memberID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+            const firstName = user[ 'firstName' ];
+            const imageUrl = user[ 'data' ][ 'profileImage' ];
+            db.collection('studies').doc(studyID).get()
+                .then(snapshot => snapshot.data())
+                .then((study) => {
+                    payload.notification.title = `New Member`;
+                    payload.notification.body = `${ firstName } just joined ${ study.name }`;
+                    payload.notification.icon = imageUrl;
+                    console.log('Created payload:', payload);
+                })
+        });
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, memberID, studyID);
     });
 });
 
