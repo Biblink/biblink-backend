@@ -273,13 +273,14 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
     const postData = change.data();
     const studyID = context.params.studyId;
     const creatorID = postData[ 'creatorID' ];
+    const date = Date.now().toString()
     const payload = {
         notification: {
             title: '',
             body: '',
             icon: '',
             studyID: studyID,
-            timestamp: Date.now().toString()
+            timestamp: date
         }
     }
     const userData = db.collection('users').doc(creatorID).get()
@@ -302,13 +303,14 @@ exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{study
     const postData = change.data();
     const studyID = context.params.studyId;
     const creatorID = postData[ 'creatorID' ];
+    const date = Date.now().toString()
     const payload = {
         notification: {
             title: '',
             body: '',
             icon: '',
             studyID: studyID,
-            timestamp: Date.now().toString()
+            timestamp: date
         }
     }
     const userData = db.collection('users').doc(creatorID).get()
@@ -331,13 +333,14 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
     const studyID = context.params.studyId;
     const topicID = context.params.topicId;
     const creatorID = postData[ 'creatorID' ];
+    const date = Date.now().toString()
     const payload = {
         notification: {
             title: '',
             body: '',
             icon: '',
             studyID: studyID,
-            timestamp: Date.now().toString()
+            timestamp: date
         }
     }
     const userData = db.collection('users').doc(creatorID).get()
@@ -363,13 +366,14 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
 exports.memberAddition = functions.firestore.document('studies/{studyId}/members/{memberId}').onCreate(async (change, context) => {
     const memberID = context.params.memberId;
     const studyID = context.params.studyId;
+    const date = Date.now().toString();
     const payload = {
         notification: {
             title: '',
             body: '',
             icon: '',
             studyID: studyID,
-            timestamp: Date.now().toString()
+            timestamp: date
         }
     }
     const userData = db.collection('users').doc(memberID).get()
