@@ -553,15 +553,15 @@ exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
 exports.sendJoinEmail = functions.https.onRequest((req, res) => {
     cors({ origin: true })(req, res, async () => {
         const studyID = req.body.studyID;
+        const email = req.body.email;
         const linkBeginning = `https://${ appUrl }/join?`
         const msg = {
-            to: '',
+            to: email,
             from: 'teambiblink@gmail.com',
             subject: '',
             templateId: 'd-e2f16f1ce6df4284adf62fbf70f8423e',
             substitutionWrappers: [ '{{', '}}' ],
             substitutions: {
-                name: '',
                 studyName: '',
                 studyDescription: '',
                 studyImage: '',
@@ -580,27 +580,9 @@ exports.sendJoinEmail = functions.https.onRequest((req, res) => {
                 msg[ 'substitutions' ][ 'studyImage' ] = profileImage;
                 msg[ 'substitutions' ][ 'joinLink' ] = linkBeginning.concat(linkEnd);
             });
-        return db.collection('studies').doc(studyID).collection('members').get()
-            .then(snapshot => snapshot.docs)
-            .then((data) => {
-                const promises = [];
-                data.forEach((user) => {
-                    promises.push(db.collection('users').doc(user[ 'uid' ]).get()
-                        .then(snapshot => snapshot.data())
-                        .then((userData) => {
-                            const userName = userData[ 'name' ];
-                            const email = userData[ 'email' ];
-                            msg[ 'to' ] = email;
-                            msg[ 'substitutions' ][ 'name' ] = userName;
-                            return sgMail.send(msg);
-                        }));
-                });
-                return Promise.all(promises).then(() => {
-                    res.status(200).send();
-                }).catch(() => {
-                    res.status(400).send();
-                });
-            })
+        msg[ 'to' ] = email;
+        return sgMail.send(msg).then(() => res.status(200).send('email sent!'))
+            .catch(err => res.status(400).send(err));
 
     });
 });
