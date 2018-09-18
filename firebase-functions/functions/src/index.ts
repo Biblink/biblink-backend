@@ -5,6 +5,7 @@ import * as express from 'express';
 import * as fetch from 'node-fetch';
 import * as url from 'url';
 import * as sgMail from '@sendgrid/mail'
+import * as sgClient from '@sendgrid/client'
 import * as cors from 'cors';
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
@@ -22,6 +23,8 @@ admin.initializeApp({
 });
 const SENDGRID_API_KEY = functions.config().sendgrid.key;
 sgMail.setApiKey(SENDGRID_API_KEY);
+sgClient.setApiKey(SENDGRID_API_KEY);
+
 //opens the database with the admin account
 const db = admin.firestore()
 
@@ -72,6 +75,33 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
     });
 });
 
+exports.addEmails = functions.firestore.document('users/{userID}').onWrite((change, context) => {
+    const users = db.collection('users').get().then((snapshot) => {
+        const data = snapshot.docs;
+        const emails = []
+        data.forEach((value) => {
+            const user = {
+                email: '',
+                first_name: '',
+                last_name: ''
+            };
+            const userData = value.data();
+            user.email = userData[ 'email' ];
+            user.first_name = userData[ 'firstName' ];
+            user.last_name = userData[ 'lastName' ];
+            emails.push(user);
+        })
+        const request = {
+            method: 'POST',
+            url: '/v3/contactdb/recipients',
+            body: emails
+        };
+        return sgClient.request(request)
+            .then(([ response, body ]) => {
+                return response.statusCode;
+            });
+    });
+});
 exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((change, context) => {
     const userId = context.params.memberId;
     const studyId = context.params.studyId;
