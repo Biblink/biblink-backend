@@ -15,6 +15,8 @@ const express = require("express");
 const fetch = require("node-fetch");
 const url = require("url");
 const sgMail = require("@sendgrid/mail");
+const sgClient = require("@sendgrid/client");
+const cors = require("cors");
 const app = express();
 const databaseUrl = 'biblya-ed2ec.firebaseio.com/';
 const appUrl = 'biblink.io';
@@ -29,6 +31,7 @@ admin.initializeApp({
 });
 const SENDGRID_API_KEY = functions.config().sendgrid.key;
 sgMail.setApiKey(SENDGRID_API_KEY);
+sgClient.setApiKey(SENDGRID_API_KEY);
 //opens the database with the admin account
 const db = admin.firestore();
 const linkRegex = /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g; // current regex taken from user Daveo on stack overflow
@@ -76,6 +79,30 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
         }
     });
 });
+exports.addEmails = functions.firestore.document('users/{userID}').onWrite((change, context) => {
+    const users = db.collection('users').get().then((snapshot) => {
+        const data = snapshot.docs;
+        const emails = [];
+        data.forEach((value) => {
+            const user = {
+                email: '',
+                first_name: '',
+                last_name: ''
+            };
+            const userData = value.data();
+            user.email = userData['email'];
+            user.first_name = userData['firstName'];
+            user.last_name = userData['lastName'];
+            emails.push(user);
+        });
+        const request = {
+            method: 'POST',
+            url: '/v3/contactdb/recipients',
+            body: emails
+        };
+        return sgClient.request(request);
+    });
+});
 exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((change, context) => {
     const userId = context.params.memberId;
     const studyId = context.params.studyId;
@@ -96,7 +123,13 @@ function anchorify(match) {
         return anchor;
     }
     else {
-        const updateMatch = 'https://'.concat(match);
+        let updateMatch;
+        if (match.indexOf('http://') !== -1 || match.indexOf('https://') !== -1) {
+            updateMatch = match;
+        }
+        else {
+            updateMatch = 'https://'.concat(match);
+        }
         const anchor = `<a class="more-link" target="_blank" href="${updateMatch}">${match}</a>`;
         return anchor;
     }
@@ -223,38 +256,13 @@ exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{p
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
     return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
 });
-exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts/{postId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
-    const postData = change.data();
-    const studyID = context.params.studyId;
-    const creatorID = postData['creatorID'];
-    const date = new Date();
-    const payload = {
-        notification: {
-            title: '',
-            body: '',
-            icon: '',
-            studyID: studyID,
-            timestamp: Date.now().toString()
-        }
-    };
-    const userData = db.collection('users').doc(creatorID).get()
-        .then(snapshot => snapshot.data())
-        .then((user) => {
-        const firstName = user['firstName'];
-        const imageUrl = user['data']['profileImage'];
-        payload.notification.title = `New ${capitalize(postData['type'])}`;
-        payload.notification.body = `${firstName} just posted a new ${postData['type']}`;
-        payload.notification.icon = imageUrl;
-        console.log('Created payload:', payload);
-    });
-    const memberIDsPromise = userData.then(() => {
-        return db.doc(`studies/${studyID}`).collection('members').get().then((members) => {
-            let memberIDs = [];
-            members.forEach((member) => {
-                memberIDs = [...memberIDs, member.id];
-            });
-            return memberIDs;
+function sendNotificationToMembers(payload, creatorID, studyID) {
+    const memberIDsPromise = db.doc(`studies/${studyID}`).collection('members').get().then((members) => {
+        let memberIDs = [];
+        members.forEach((member) => {
+            memberIDs = [...memberIDs, member.id];
         });
+        return memberIDs;
     });
     return memberIDsPromise.then((ids) => {
         const promises = [];
@@ -280,6 +288,128 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
             }
         });
         return 'finished sending notifications';
+    });
+}
+exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts/{postId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+    const postData = change.data();
+    const studyID = context.params.studyId;
+    const creatorID = postData['creatorID'];
+    const date = Date.now().toString();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: date
+        }
+    };
+    const userData = db.collection('users').doc(creatorID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+        const firstName = user['firstName'];
+        const imageUrl = user['data']['profileImage'];
+        payload.notification.title = `New ${capitalize(postData['type'])}`;
+        payload.notification.body = `${firstName} just posted a new ${postData['type']}`;
+        payload.notification.icon = imageUrl;
+        console.log('Created payload:', payload);
+    });
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, creatorID, studyID);
+    });
+}));
+exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{studyId}/topics/{topicId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+    const postData = change.data();
+    const studyID = context.params.studyId;
+    const creatorID = postData['creatorID'];
+    const date = Date.now().toString();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: date
+        }
+    };
+    const userData = db.collection('users').doc(creatorID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+        const firstName = user['firstName'];
+        const imageUrl = user['data']['profileImage'];
+        payload.notification.title = `New Topic`;
+        payload.notification.body = `${firstName} just created a new topic called ${postData.title}`;
+        payload.notification.icon = imageUrl;
+        console.log('Created payload:', payload);
+    });
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, creatorID, studyID);
+    });
+}));
+exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}/topics/{topicId}/discussions/{discussionId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+    const postData = change.data();
+    const studyID = context.params.studyId;
+    const topicID = context.params.topicId;
+    const creatorID = postData['creatorID'];
+    const date = Date.now().toString();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: date
+        }
+    };
+    const userData = db.collection('users').doc(creatorID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+        const firstName = user['firstName'];
+        const imageUrl = user['data']['profileImage'];
+        const topicData = db.collection('studies').doc(studyID).collection('topics').doc(topicID).get()
+            .then(snapshot => snapshot.data())
+            .then((topic) => {
+            payload.notification.title = `New Discussion`;
+            payload.notification.body = `${firstName} just posted a new discussion called ${postData.title} in ${topic.title}`;
+            payload.notification.icon = imageUrl;
+            console.log('Created payload:', payload);
+        });
+        return topicData;
+    });
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, creatorID, studyID);
+    });
+}));
+exports.memberAddition = functions.firestore.document('studies/{studyId}/members/{memberId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+    const memberID = context.params.memberId;
+    const studyID = context.params.studyId;
+    const date = Date.now().toString();
+    const payload = {
+        notification: {
+            title: '',
+            body: '',
+            icon: '',
+            studyID: studyID,
+            timestamp: date
+        }
+    };
+    const userData = db.collection('users').doc(memberID).get()
+        .then(snapshot => snapshot.data())
+        .then((user) => {
+        const firstName = user['firstName'];
+        const imageUrl = user['data']['profileImage'];
+        const studyData = db.collection('studies').doc(studyID).get()
+            .then(snapshot => snapshot.data())
+            .then((study) => {
+            payload.notification.title = `New Member`;
+            payload.notification.body = `${firstName} just joined ${study.name}`;
+            payload.notification.icon = imageUrl;
+            console.log('Created payload:', payload);
+        });
+        return studyData;
+    });
+    return userData.then(() => {
+        return sendNotificationToMembers(payload, memberID, studyID);
     });
 }));
 exports.countDiscussionNumber = functions.firestore.document('studies/{studyId}/topics/{topicId}/discussions/{documentId}').onCreate((change, context) => {
@@ -361,20 +491,75 @@ app.get('*', (req, res) => {
 });
 exports.app = functions.https.onRequest(app);
 exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
-    const email = req.body.email;
-    const name = req.body.name;
-    const msg = {
-        to: email,
-        from: 'teambiblink@gmail.com',
-        subject: 'Welcome to Biblink',
-        templateId: 'd-360af3ce0d5e4159946db509de657734',
-        substitutionWrappers: ['{{', '}}'],
-        substitutions: {
-            name: name
-        }
-    };
-    return sgMail.send(msg)
-        .then(() => res.status(200).send('email sent!'))
-        .catch(err => res.status(400).send(err));
+    cors({ origin: true })(req, res, () => {
+        const email = req.body.email;
+        const name = req.body.name;
+        const msg = {
+            to: email,
+            from: 'teambiblink@gmail.com',
+            subject: 'Welcome to Biblink',
+            templateId: 'd-360af3ce0d5e4159946db509de657734',
+            substitutionWrappers: ['{{', '}}'],
+            substitutions: {
+                name: name
+            }
+        };
+        return sgMail.send(msg)
+            .then(() => res.status(200).send('email sent!'))
+            .catch(err => res.status(400).send(err));
+    });
+});
+exports.sendJoinEmail = functions.https.onRequest((req, res) => {
+    cors({ origin: true })(req, res, () => __awaiter(this, void 0, void 0, function* () {
+        const studyID = req.body.studyID;
+        const linkBeginning = `https://${appUrl}/join?`;
+        const msg = {
+            to: '',
+            from: 'teambiblink@gmail.com',
+            subject: '',
+            templateId: 'd-e2f16f1ce6df4284adf62fbf70f8423e',
+            substitutionWrappers: ['{{', '}}'],
+            substitutions: {
+                name: '',
+                studyName: '',
+                studyDescription: '',
+                studyImage: '',
+                joinLink: ''
+            }
+        };
+        yield db.collection('studies').doc(studyID).get()
+            .then(snapshot => snapshot.data())
+            .then((data) => {
+            const description = data['metadata']['description'];
+            const profileImage = data['metadata']['profileImage'];
+            const name = data['name'];
+            const linkEnd = `${data['search_name']}#${data['uniqueID']}`;
+            msg['substitutions']['studyName'] = name;
+            msg['substitutions']['studyDescription'] = description;
+            msg['substitutions']['studyImage'] = profileImage;
+            msg['substitutions']['joinLink'] = linkBeginning.concat(linkEnd);
+        });
+        return db.collection('studies').doc(studyID).collection('members').get()
+            .then(snapshot => snapshot.docs)
+            .then((data) => {
+            const promises = [];
+            data.forEach((user) => {
+                promises.push(db.collection('users').doc(user['uid']).get()
+                    .then(snapshot => snapshot.data())
+                    .then((userData) => {
+                    const userName = userData['name'];
+                    const email = userData['email'];
+                    msg['to'] = email;
+                    msg['substitutions']['name'] = userName;
+                    return sgMail.send(msg);
+                }));
+            });
+            return Promise.all(promises).then(() => {
+                res.status(200).send();
+            }).catch(() => {
+                res.status(400).send();
+            });
+        });
+    }));
 });
 //# sourceMappingURL=index.js.map

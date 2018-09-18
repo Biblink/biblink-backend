@@ -580,7 +580,7 @@ exports.sendJoinEmail = functions.https.onRequest((req, res) => {
                 msg[ 'substitutions' ][ 'studyImage' ] = profileImage;
                 msg[ 'substitutions' ][ 'joinLink' ] = linkBeginning.concat(linkEnd);
             });
-        db.collection('studies').doc(studyID).collection('members').get()
+        return db.collection('studies').doc(studyID).collection('members').get()
             .then(snapshot => snapshot.docs)
             .then((data) => {
                 const promises = [];
