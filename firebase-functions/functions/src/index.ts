@@ -97,9 +97,6 @@ exports.addEmails = functions.firestore.document('users/{userID}').onWrite((chan
             body: emails
         };
         return sgClient.request(request)
-            .then(([ response, body ]) => {
-                return response.statusCode;
-            });
     });
 });
 exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((change, context) => {
