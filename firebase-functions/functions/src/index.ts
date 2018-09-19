@@ -554,7 +554,7 @@ exports.sendJoinEmail = functions.https.onRequest((req, res) => {
     cors({ origin: true })(req, res, async () => {
         const studyID = req.body.studyID;
         const email = req.body.email;
-        const linkBeginning = `https://${ appUrl }/join?`
+        const linkBeginning = `https://${ appUrl }/join?info=`
         const msg = {
             to: email,
             from: 'teambiblink@gmail.com',
@@ -574,7 +574,7 @@ exports.sendJoinEmail = functions.https.onRequest((req, res) => {
                 const description = data[ 'metadata' ][ 'description' ];
                 const profileImage = data[ 'metadata' ][ 'profileImage' ];
                 const name = data[ 'name' ]
-                const linkEnd = `${ data[ 'search_name' ] }#${ data[ 'uniqueID' ] }`;
+                const linkEnd = `${ data[ 'search_name' ] };${ data[ 'uniqueID' ] }`;
                 msg[ 'substitutions' ][ 'studyName' ] = name;
                 msg[ 'substitutions' ][ 'studyDescription' ] = description;
                 msg[ 'substitutions' ][ 'studyImage' ] = profileImage;
