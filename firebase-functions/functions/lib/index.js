@@ -40,13 +40,16 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.substr(1);
 }
 //this function updates the name of study leaders
-exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpdate((change, context) => {
+exports.updateLeaderName = functions.firestore
+    .document('users/{userId}')
+    .onUpdate((change, context) => {
     //grabs updated name value
     const updatedValue = change.after.data();
     const name = updatedValue.name;
     const userId = context.params.userId;
     //finds which studies the user is a leader in
-    const userStudies = db.collection('users')
+    const userStudies = db
+        .collection('users')
         .doc(userId)
         .collection('studies')
         .where('role', '==', 'leader')
@@ -69,21 +72,31 @@ exports.updateLeaderName = functions.firestore.document('users/{userId}').onUpda
         else {
             const studiesRef = db.collection('studies'); //this block iterates through every study where the user is a leader, and changes the leader property to the new name
             studyIds.forEach(ID => {
-                const metadata = studiesRef.doc(ID).get().then(snapshot => {
+                const metadata = studiesRef
+                    .doc(ID)
+                    .get()
+                    .then(snapshot => {
                     const studyMeta = snapshot.data()['metadata'];
                     studyMeta['leader'] = name;
-                    const updataMetaData = studiesRef.doc(ID).update({ metadata: studyMeta });
+                    const updataMetaData = studiesRef
+                        .doc(ID)
+                        .update({ metadata: studyMeta });
                 });
             });
             return `updated studies with leader: ${name}`;
         }
     });
 });
-exports.addEmails = functions.firestore.document('users/{userID}').onWrite((change, context) => {
-    const users = db.collection('users').get().then((snapshot) => {
+exports.addEmails = functions.firestore
+    .document('users/{userID}')
+    .onWrite((change, context) => {
+    const users = db
+        .collection('users')
+        .get()
+        .then(snapshot => {
         const data = snapshot.docs;
         const emails = [];
-        data.forEach((value) => {
+        data.forEach(value => {
             const user = {
                 email: '',
                 first_name: '',
@@ -103,11 +116,17 @@ exports.addEmails = functions.firestore.document('users/{userID}').onWrite((chan
         return sgClient.request(request);
     });
 });
-exports.updateUserRole = functions.firestore.document('studies/{studyId}/members/{memberId}').onUpdate((change, context) => {
+exports.updateUserRole = functions.firestore
+    .document('studies/{studyId}/members/{memberId}')
+    .onUpdate((change, context) => {
     const userId = context.params.memberId;
     const studyId = context.params.studyId;
     const newRole = change.after.data().role;
-    const userStudy = db.collection('users').doc(`${userId}`).collection('studies').doc(`${studyId}`);
+    const userStudy = db
+        .collection('users')
+        .doc(`${userId}`)
+        .collection('studies')
+        .doc(`${studyId}`);
     return userStudy.update({ role: newRole }).then(() => {
         console.log(`updated user ${userId} to role ${newRole} in study ${studyId}`);
     });
@@ -116,13 +135,16 @@ const httpRGX = /(https:|http:)+(\/\/)+/g; //defines regular expression for find
 function anchorify(match) {
     const httpTest = httpRGX.test(match);
     if (match.indexOf('</a>') !== -1) {
+        //If the link is already in an anchor, return it as is
         return match;
     }
     if (httpTest === true) {
+        //if the link has http on it already, make the anchor
         const anchor = `<a class="more-link" target="_blank" href="${match}">${match}</a>`;
         return anchor;
     }
     else {
+        //if not, add the https:// and then make an anchor
         let updateMatch;
         if (match.indexOf('http://') !== -1 || match.indexOf('https://') !== -1) {
             updateMatch = match;
@@ -134,23 +156,85 @@ function anchorify(match) {
         return anchor;
     }
 }
-const bookList = ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings',
-    '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon',
-    'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum',
-    'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi',
-    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians',
-    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
-    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', ' Revelation'];
+const bookList = [
+    'Genesis',
+    'Exodus',
+    'Leviticus',
+    'Numbers',
+    'Deuteronomy',
+    'Joshua',
+    'Judges',
+    'Ruth',
+    '1 Samuel',
+    '2 Samuel',
+    '1 Kings',
+    '2 Kings',
+    '1 Chronicles',
+    '2 Chronicles',
+    'Ezra',
+    'Nehemiah',
+    'Esther',
+    'Job',
+    'Psalms',
+    'Proverbs',
+    'Ecclesiastes',
+    'Song of Solomon',
+    'Isaiah',
+    'Jeremiah',
+    'Lamentations',
+    'Ezekiel',
+    'Daniel',
+    'Hosea',
+    'Joel',
+    'Amos',
+    'Obadiah',
+    'Jonah',
+    'Micah',
+    'Nahum',
+    'Habakkuk',
+    'Zephaniah',
+    'Haggai',
+    'Zechariah',
+    'Malachi',
+    'Matthew',
+    'Mark',
+    'Luke',
+    'John',
+    'Acts',
+    'Romans',
+    '1 Corinthians',
+    '2 Corinthians',
+    'Galatians',
+    'Ephesians',
+    'Philippians',
+    'Colossians',
+    '1 Thessalonians',
+    '2 Thessalonians',
+    '1 Timothy',
+    '2 Timothy',
+    'Titus',
+    'Philemon',
+    'Hebrews',
+    'James',
+    '1 Peter',
+    '2 Peter',
+    '1 John',
+    '2 John',
+    '3 John',
+    'Jude',
+    ' Revelation'
+];
 function spanify(match) {
+    //This function creates a span that encapsulates the verse references
     const rawRef = match.match(/(\d+:+.*)(\d){1}/g);
-    const stringRef = rawRef.join("").trim();
-    let bookCont = "";
-    let refCont = "";
-    if (stringRef.endsWith(",")) {
+    const stringRef = rawRef.join('').trim();
+    let bookCont = '';
+    let refCont = '';
+    if (stringRef.endsWith(',')) {
         const slicedRef = stringRef.slice(0, -1);
         const squishedRef = slicedRef.replace(' ', '');
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g);
-        const stringBook = rawBook.join("").trim();
+        const stringBook = rawBook.join('').trim();
         //const newMatch = stringBook.concat(" " + squishedRef)
         bookCont = stringBook;
         refCont = squishedRef;
@@ -158,108 +242,145 @@ function spanify(match) {
     else {
         const squishedRef = stringRef.replace(' ', '');
         const rawBook = match.match(/((\w)*[^:,;.'"\d])/g);
-        const stringBook = rawBook.join("").trim();
+        const stringBook = rawBook.join('').trim();
         //const newMatch = stringBook.concat(" " + squishedRef)
         bookCont = stringBook;
         refCont = squishedRef;
     }
     const fuzzySet = Fuzzy(bookList, true, 4, 4);
-    const fuzzyMatchs = fuzzySet.get(bookCont, .30);
+    const fuzzyMatchs = fuzzySet.get(bookCont, 0.3);
     const topMatch = fuzzyMatchs[0];
     const reference = refCont; //matchCont.trim().split(' ')[ 1 ].trim();
     const bookName = topMatch[1];
     const span = `<span class="verse-link" data-verse="${bookName.trim()} ${reference}">${bookName.trim()} ${reference}</span>`; //uses the number bit and the book bit to make an html element
     return span;
 }
-exports.annotationRegex = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}').onWrite((change, context) => {
+exports.annotationRegex = functions.firestore
+    .document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}')
+    .onWrite((change, context) => {
     if (!change.after.exists) {
         return null;
     }
     const data = change.after.data();
     let annotationText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - 2000) {
+        //stops an infinite loop
         return null;
     }
     annotationText = annotationText.replace(linkRegex, anchorify); //adds anchors
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
-    return change.after.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks });
+    return change.after.ref.update({
+        htmlText: annotationText,
+        lastUpdated: now,
+        links: foundLinks
+    });
 });
-exports.annotationReply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}').onWrite((change, context) => {
+exports.annotationReply = functions.firestore
+    .document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}')
+    .onWrite((change, context) => {
     if (!change.after.exists) {
         return null;
     }
     const data = change.after.data();
     let replyText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - 2000) {
         return null;
     }
     replyText = replyText.replace(linkRegex, anchorify);
     return change.after.ref.update({ htmlText: replyText, lastUpdated: now });
 });
-exports.annotationSubreply = functions.firestore.document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((change, context) => {
+exports.annotationSubreply = functions.firestore
+    .document('studies/{studyId}/annotations/{annotationName}/{annotationType}/{annotationId}/replies/{replyId}/subreplies/{subreplyId}')
+    .onWrite((change, context) => {
+    //same function but for subreplies
     if (!change.after.exists) {
         return null;
     }
     const data = change.after.data();
     let subreplyText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - 2000) {
         return null;
     }
     subreplyText = subreplyText.replace(linkRegex, anchorify);
-    return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
+    return change.after.ref.update({
+        htmlText: subreplyText,
+        lastUpdated: now
+    });
 });
-exports.postRegex = functions.firestore.document('studies/{studyId}/posts/{postId}').onWrite((change, context) => {
+exports.postRegex = functions.firestore
+    .document('studies/{studyId}/posts/{postId}')
+    .onWrite((change, context) => {
+    //this firebase function formats posts with spanify and httpRGX
     if (!change.after.exists) {
         return null;
     }
     const data = change.after.data();
     let annotationText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - 2000) {
+        //stops an infinite loop
         return null;
     }
     annotationText = annotationText.replace(linkRegex, anchorify); //adds anchors
     annotationText = annotationText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+(\d)+(:)+([\d,-\s;]*)(\d){1}/g, spanify); //adds spans
     const foundLinks = annotationText.match(/<a[^>]*>([^<]+)<\/a>/g);
     const foundVerses = annotationText.match(/(<span\s.+>)(.)*(<\/span>)/g);
-    return change.after.ref.update({ htmlText: annotationText, lastUpdated: now, links: foundLinks, verses: foundVerses });
+    return change.after.ref.update({
+        htmlText: annotationText,
+        lastUpdated: now,
+        links: foundLinks,
+        verses: foundVerses
+    });
 });
-exports.replyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}').onWrite((change, context) => {
+exports.replyRegex = functions.firestore
+    .document('studies/{studyId}/posts/{postId}/replies/{replyId}')
+    .onWrite((change, context) => {
+    //this function does the exact same thing but with replies
     if (!change.after.exists) {
         return null;
     }
     const data = change.after.data();
     let replyText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - 2000) {
         return null;
     }
     replyText = replyText.replace(linkRegex, anchorify);
     replyText = replyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
     return change.after.ref.update({ htmlText: replyText, lastUpdated: now });
 });
-exports.subreplyRegex = functions.firestore.document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}').onWrite((change, context) => {
+exports.subreplyRegex = functions.firestore
+    .document('studies/{studyId}/posts/{postId}/replies/{replyId}/subreplies/{subreplyId}')
+    .onWrite((change, context) => {
+    //same function but for subreplies
     if (!change.after.exists) {
         return null;
     }
     const data = change.after.data();
     let subreplyText = data['text'];
     const now = new Date().getTime();
-    if (data.lastUpdated !== undefined && data.lastUpdated > now - (2000)) {
+    if (data.lastUpdated !== undefined && data.lastUpdated > now - 2000) {
         return null;
     }
     subreplyText = subreplyText.replace(linkRegex, anchorify);
     subreplyText = subreplyText.replace(/(Song)?\s?(of)?\s?(Solomon)?(\d\s)?([\w.]+)\s+([\d:,-\s;]+)/g, spanify);
-    return change.after.ref.update({ htmlText: subreplyText, lastUpdated: now });
+    return change.after.ref.update({
+        htmlText: subreplyText,
+        lastUpdated: now
+    });
 });
 function sendNotificationToMembers(payload, creatorID, studyID) {
-    const memberIDsPromise = db.doc(`studies/${studyID}`).collection('members').get().then((members) => {
+    const memberIDsPromise = db
+        .doc(`studies/${studyID}`)
+        .collection('members')
+        .get()
+        .then(members => {
         let memberIDs = [];
-        members.forEach((member) => {
+        members.forEach(member => {
             memberIDs = [...memberIDs, member.id];
         });
         return memberIDs;
@@ -268,11 +389,15 @@ function sendNotificationToMembers(payload, creatorID, studyID) {
         const promises = [];
         ids.forEach((id) => {
             if (id !== creatorID) {
-                db.doc(`users/${id}`).get()
+                db.doc(`users/${id}`)
+                    .get()
                     .then(snapshot => snapshot.data())
                     .then(user => {
                     let tokens = [];
-                    const addNotif = db.doc(`users/${id}`).collection('notifications').add(payload);
+                    const addNotif = db
+                        .doc(`users/${id}`)
+                        .collection('notifications')
+                        .add(payload);
                     if (user.fcmTokens !== undefined) {
                         tokens = user.fcmTokens ? Object.keys(user.fcmTokens) : [];
                         if (!tokens.length) {
@@ -290,7 +415,9 @@ function sendNotificationToMembers(payload, creatorID, studyID) {
         return 'finished sending notifications';
     });
 }
-exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts/{postId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+exports.notifyUserOfPost = functions.firestore
+    .document('studies/{studyId}/posts/{postId}')
+    .onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
     const postData = change.data();
     const studyID = context.params.studyId;
     const creatorID = postData['creatorID'];
@@ -304,9 +431,12 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
             timestamp: date
         }
     };
-    const userData = db.collection('users').doc(creatorID).get()
+    const userData = db
+        .collection('users')
+        .doc(creatorID)
+        .get()
         .then(snapshot => snapshot.data())
-        .then((user) => {
+        .then(user => {
         const firstName = user['firstName'];
         const imageUrl = user['data']['profileImage'];
         payload.notification.title = `New ${capitalize(postData['type'])}`;
@@ -318,7 +448,9 @@ exports.notifyUserOfPost = functions.firestore.document('studies/{studyId}/posts
         return sendNotificationToMembers(payload, creatorID, studyID);
     });
 }));
-exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{studyId}/topics/{topicId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+exports.notifyUserOfTopicCreation = functions.firestore
+    .document('studies/{studyId}/topics/{topicId}')
+    .onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
     const postData = change.data();
     const studyID = context.params.studyId;
     const creatorID = postData['creatorID'];
@@ -332,9 +464,12 @@ exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{study
             timestamp: date
         }
     };
-    const userData = db.collection('users').doc(creatorID).get()
+    const userData = db
+        .collection('users')
+        .doc(creatorID)
+        .get()
         .then(snapshot => snapshot.data())
-        .then((user) => {
+        .then(user => {
         const firstName = user['firstName'];
         const imageUrl = user['data']['profileImage'];
         payload.notification.title = `New Topic`;
@@ -346,7 +481,9 @@ exports.notifyUserOfTopicCreation = functions.firestore.document('studies/{study
         return sendNotificationToMembers(payload, creatorID, studyID);
     });
 }));
-exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}/topics/{topicId}/discussions/{discussionId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+exports.notifyUserOfDiscussion = functions.firestore
+    .document('studies/{studyId}/topics/{topicId}/discussions/{discussionId}')
+    .onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
     const postData = change.data();
     const studyID = context.params.studyId;
     const topicID = context.params.topicId;
@@ -361,14 +498,22 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
             timestamp: date
         }
     };
-    const userData = db.collection('users').doc(creatorID).get()
+    const userData = db
+        .collection('users')
+        .doc(creatorID)
+        .get()
         .then(snapshot => snapshot.data())
-        .then((user) => {
+        .then(user => {
         const firstName = user['firstName'];
         const imageUrl = user['data']['profileImage'];
-        const topicData = db.collection('studies').doc(studyID).collection('topics').doc(topicID).get()
+        const topicData = db
+            .collection('studies')
+            .doc(studyID)
+            .collection('topics')
+            .doc(topicID)
+            .get()
             .then(snapshot => snapshot.data())
-            .then((topic) => {
+            .then(topic => {
             payload.notification.title = `New Discussion`;
             payload.notification.body = `${firstName} just posted a new discussion called ${postData.title} in ${topic.title}`;
             payload.notification.icon = imageUrl;
@@ -380,7 +525,9 @@ exports.notifyUserOfDiscussion = functions.firestore.document('studies/{studyId}
         return sendNotificationToMembers(payload, creatorID, studyID);
     });
 }));
-exports.memberAddition = functions.firestore.document('studies/{studyId}/members/{memberId}').onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
+exports.memberAddition = functions.firestore
+    .document('studies/{studyId}/members/{memberId}')
+    .onCreate((change, context) => __awaiter(this, void 0, void 0, function* () {
     const memberID = context.params.memberId;
     const studyID = context.params.studyId;
     const date = Date.now().toString();
@@ -393,14 +540,20 @@ exports.memberAddition = functions.firestore.document('studies/{studyId}/members
             timestamp: date
         }
     };
-    const userData = db.collection('users').doc(memberID).get()
+    const userData = db
+        .collection('users')
+        .doc(memberID)
+        .get()
         .then(snapshot => snapshot.data())
-        .then((user) => {
+        .then(user => {
         const firstName = user['firstName'];
         const imageUrl = user['data']['profileImage'];
-        const studyData = db.collection('studies').doc(studyID).get()
+        const studyData = db
+            .collection('studies')
+            .doc(studyID)
+            .get()
             .then(snapshot => snapshot.data())
-            .then((study) => {
+            .then(study => {
             payload.notification.title = `New Member`;
             payload.notification.body = `${firstName} just joined ${study.name}`;
             payload.notification.icon = imageUrl;
@@ -412,20 +565,23 @@ exports.memberAddition = functions.firestore.document('studies/{studyId}/members
         return sendNotificationToMembers(payload, memberID, studyID);
     });
 }));
-exports.countDiscussionNumber = functions.firestore.document('studies/{studyId}/topics/{topicId}/discussions/{documentId}').onCreate((change, context) => {
+exports.countDiscussionNumber = functions.firestore
+    .document('studies/{studyId}/topics/{topicId}/discussions/{documentId}')
+    .onCreate((change, context) => {
     const topicId = context.params.topicId;
     const ref = db.doc(`/studies/${context.params.studyId}/topics/${topicId}`);
-    return ref.get()
+    return ref
+        .get()
         .then(snapshot => snapshot.data())
-        .then((topic) => {
+        .then(topic => {
         topic['discussionNumber'] += 1;
         return topic;
     })
-        .then((topic) => {
+        .then(topic => {
         return ref.update(topic);
     });
 });
-// Generates the URL 
+// Generates the URL
 function generateUrl(request) {
     return url.format({
         protocol: request.protocol,
@@ -504,62 +660,57 @@ exports.sendWelcomeEmail = functions.https.onRequest((req, res) => {
                 name: name
             }
         };
-        return sgMail.send(msg)
+        return sgMail
+            .send(msg)
             .then(() => res.status(200).send('email sent!'))
             .catch(err => res.status(400).send(err));
     });
 });
 exports.sendJoinEmail = functions.https.onRequest((req, res) => {
-    cors({ origin: true })(req, res, () => __awaiter(this, void 0, void 0, function* () {
+    cors({ origin: true })(req, res, () => {
         const studyID = req.body.studyID;
-        const linkBeginning = `https://${appUrl}/join?`;
+        const email = req.body.email;
+        console.log(email);
+        const linkBeginning = `https://${appUrl}/join?info=`;
         const msg = {
-            to: '',
+            to: email,
             from: 'teambiblink@gmail.com',
             subject: '',
             templateId: 'd-e2f16f1ce6df4284adf62fbf70f8423e',
-            substitutionWrappers: ['{{', '}}'],
-            substitutions: {
-                name: '',
+            dynamic_template_data: {
                 studyName: '',
                 studyDescription: '',
                 studyImage: '',
                 joinLink: ''
             }
         };
-        yield db.collection('studies').doc(studyID).get()
+        const promise = db
+            .collection('studies')
+            .doc(studyID)
+            .get()
             .then(snapshot => snapshot.data())
-            .then((data) => {
+            .then(data => {
             const description = data['metadata']['description'];
             const profileImage = data['metadata']['profileImage'];
             const name = data['name'];
-            const linkEnd = `${data['search_name']}#${data['uniqueID']}`;
-            msg['substitutions']['studyName'] = name;
-            msg['substitutions']['studyDescription'] = description;
-            msg['substitutions']['studyImage'] = profileImage;
-            msg['substitutions']['joinLink'] = linkBeginning.concat(linkEnd);
+            const linkEnd = `${data['search_name']};${data['uniqueID']}`;
+            msg['dynamic_template_data']['studyName'] = name;
+            msg['dynamic_template_data']['studyDescription'] = description;
+            msg['dynamic_template_data']['studyImage'] = profileImage;
+            msg['dynamic_template_data']['joinLink'] = linkBeginning.concat(linkEnd);
+            return msg;
         });
-        return db.collection('studies').doc(studyID).collection('members').get()
-            .then(snapshot => snapshot.docs)
-            .then((data) => {
-            const promises = [];
-            data.forEach((user) => {
-                promises.push(db.collection('users').doc(user['uid']).get()
-                    .then(snapshot => snapshot.data())
-                    .then((userData) => {
-                    const userName = userData['name'];
-                    const email = userData['email'];
-                    msg['to'] = email;
-                    msg['substitutions']['name'] = userName;
-                    return sgMail.send(msg);
-                }));
-            });
-            return Promise.all(promises).then(() => {
-                res.status(200).send();
-            }).catch(() => {
-                res.status(400).send();
+        return promise.then(message => {
+            message['to'] = email;
+            console.log(message);
+            return sgMail
+                .send(message)
+                .then(() => res.status(200).send('email sent!'))
+                .catch(err => {
+                console.log(err);
+                res.status(400).send(err);
             });
         });
-    }));
+    });
 });
 //# sourceMappingURL=index.js.map
