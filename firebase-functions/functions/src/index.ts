@@ -430,11 +430,6 @@ function sendNotificationToMembers(
               .add(payload);
             if (user.fcmTokens !== undefined) {
               tokens = user.fcmTokens ? Object.keys(user.fcmTokens) : [];
-              if (!tokens.length) {
-                throw new Error('User does not have any tokens!');
-              }
-            } else {
-              throw new Error('User does not have any tokens!');
             }
             return admin.messaging().sendToDevice(tokens, payload);
           })
@@ -468,12 +463,15 @@ exports.notifyUserOfPost = functions.firestore
       .then(snapshot => snapshot.data())
       .then(user => {
         const firstName = user['firstName'];
-        const imageUrl = user['data']['profileImage'];
+        let imageUrl = user['data']['profileImage'];
 
         payload.notification.title = `New ${capitalize(postData['type'])}`;
         payload.notification.body = `${firstName} just posted a new ${
           postData['type']
         }`;
+        if (imageUrl === null) {
+          imageUrl = 'https://i.postimg.cc/k50TqRF7/default-photo.png';
+        }
         payload.notification.icon = imageUrl;
         console.log('Created payload:', payload);
       });
@@ -498,6 +496,7 @@ exports.notifyUserOfTopicCreation = functions.firestore
         timestamp: date
       }
     };
+
     const userData = db
       .collection('users')
       .doc(creatorID)
@@ -505,8 +504,10 @@ exports.notifyUserOfTopicCreation = functions.firestore
       .then(snapshot => snapshot.data())
       .then(user => {
         const firstName = user['firstName'];
-        const imageUrl = user['data']['profileImage'];
-
+        let imageUrl = user['data']['profileImage'];
+        if (imageUrl === null) {
+          imageUrl = 'https://i.postimg.cc/k50TqRF7/default-photo.png';
+        }
         payload.notification.title = `New Topic`;
         payload.notification.body = `${firstName} just created a new topic called ${
           postData.title
@@ -542,7 +543,10 @@ exports.notifyUserOfDiscussion = functions.firestore
       .then(snapshot => snapshot.data())
       .then(user => {
         const firstName = user['firstName'];
-        const imageUrl = user['data']['profileImage'];
+        let imageUrl = user['data']['profileImage'];
+        if (imageUrl === null) {
+          imageUrl = 'https://i.postimg.cc/k50TqRF7/default-photo.png';
+        }
         const topicData = db
           .collection('studies')
           .doc(studyID)
@@ -587,7 +591,10 @@ exports.memberAddition = functions.firestore
       .then(snapshot => snapshot.data())
       .then(user => {
         const firstName = user['firstName'];
-        const imageUrl = user['data']['profileImage'];
+        let imageUrl = user['data']['profileImage'];
+        if (imageUrl === null) {
+          imageUrl = 'https://i.postimg.cc/k50TqRF7/default-photo.png';
+        }
         const studyData = db
           .collection('studies')
           .doc(studyID)
