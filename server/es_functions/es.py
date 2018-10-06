@@ -72,7 +72,7 @@ class SearchES(object):
                     response = search_definition.query(query_string).highlight('text').scan()
                 highlight_param = 'text'
         final_response = []
-        for hit in response.hits.hits:
+        for hit in response:
             data = hit['_source']
             data['score'] = str(hit['_score'])
             if highlight_param == 'text':
