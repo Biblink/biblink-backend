@@ -67,9 +67,9 @@ class SearchES(object):
                 query_string = Q(
                     'match_phrase', text={'query': term, 'slop': 2})
                 if sort_type == 'book':
-                    response = search_definition.sort('book_id').query(query_string).highlight('text').scan()
+                    response = search_definition.sort('book_id').query(query_string).highlight('text')[0:100].execute()
                 else:
-                    response = search_definition.query(query_string).highlight('text').scan()
+                    response = search_definition.query(query_string).highlight('text')[0:100].execute()
                 highlight_param = 'text'
         final_response = []
         for hit in response:
