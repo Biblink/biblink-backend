@@ -14,7 +14,7 @@
     "@sendgrid/client": "^6.3.0",
     "@sendgrid/mail": "^6.3.1",
     "cors": "^2.8.4",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "firebase-admin": "^5.12.1",
     "firebase-functions": "^1.0.4",
     "fuzzyset.js": "0.0.4",
